@@ -18,12 +18,20 @@ export default function BillTemplatesPage({ user }) {
   const [success, setSuccess] = useState("");
 
   const fetchTemplates = useCallback(async () => {
-    if (!user?.email) return;
+    if (!user?.email) {
+      setError("User email not found");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
     try {
       const data = await getTemplates(user.email);
-      setTemplates(data || []);
-    } catch {
-      setError("Failed to load templates");
+      setTemplates(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch templates error:", err);
+      setError(err.message || "Failed to load templates. Please try again.");
+      setTemplates([]);
     } finally {
       setLoading(false);
     }
@@ -35,8 +43,13 @@ export default function BillTemplatesPage({ user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
     if (!form.templateName || !form.vendor || !form.category) {
       setError("All fields are required");
+      return;
+    }
+    if (!user?.email) {
+      setError("User email not found");
       return;
     }
     try {
@@ -50,6 +63,7 @@ export default function BillTemplatesPage({ user }) {
       fetchTemplates();
       setTimeout(() => setSuccess(""), 3000);
     } catch (err) {
+      console.error("Create template error:", err);
       setError(err.message || "Failed to create template");
     }
   };
@@ -69,7 +83,27 @@ export default function BillTemplatesPage({ user }) {
   if (loading) {
     return (
       <section className="panel rounded-2xl p-6 shadow-panel">
-        <p className="text-slate-400">Loading templates...</p>
+        <p className="text-slate-400">Loading bill templates...</p>
+      </section>
+    );
+  }
+
+  if (error && templates.length === 0 && !showForm) {
+    return (
+      <section className="space-y-5">
+        <div className="panel rounded-2xl p-6 shadow-panel">
+          <h2 className="page-title text-2xl font-bold">Bill Templates</h2>
+          <p className="mt-2 text-sm text-slate-400">Create and manage reusable bill templates</p>
+        </div>
+        <div className="panel rounded-2xl border border-rose-200/30 bg-rose-500/5 p-8 shadow-panel dark:border-rose-800/30 dark:bg-rose-900/10">
+          <p className="text-sm text-rose-600 dark:text-rose-400 mb-4">{error}</p>
+          <button
+            onClick={() => fetchTemplates()}
+            className="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 font-medium transition-colors text-sm"
+          >
+            Retry
+          </button>
+        </div>
       </section>
     );
   }

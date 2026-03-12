@@ -19,11 +19,15 @@ export default function VendorManagementPage({ user }) {
   const [success, setSuccess] = useState("");
 
   const fetchVendors = useCallback(async () => {
+    setLoading(true);
+    setError("");
     try {
       const data = await getVendors(filterStatus);
-      setVendors(data || []);
-    } catch {
-      setError("Failed to load vendors");
+      setVendors(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch vendors error:", err);
+      setError(err.message || "Failed to load vendors. Please try again.");
+      setVendors([]);
     } finally {
       setLoading(false);
     }
@@ -92,6 +96,26 @@ export default function VendorManagementPage({ user }) {
     return (
       <section className="panel rounded-2xl p-6 shadow-panel">
         <p className="text-slate-400">Loading vendors...</p>
+      </section>
+    );
+  }
+
+  if (error && vendors.length === 0 && !showForm) {
+    return (
+      <section className="space-y-5">
+        <div className="panel rounded-2xl p-6 shadow-panel">
+          <h2 className="page-title text-2xl font-bold">Vendor Management</h2>
+          <p className="mt-2 text-sm text-slate-400">Manage vendors and track spending analytics</p>
+        </div>
+        <div className="panel rounded-2xl border border-rose-200/30 bg-rose-500/5 p-8 shadow-panel dark:border-rose-800/30 dark:bg-rose-900/10">
+          <p className="text-sm text-rose-600 dark:text-rose-400 mb-4">{error}</p>
+          <button
+            onClick={() => fetchVendors()}
+            className="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 font-medium transition-colors text-sm"
+          >
+            Retry
+          </button>
+        </div>
       </section>
     );
   }

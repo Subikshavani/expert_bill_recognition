@@ -16,11 +16,20 @@ export default function BillCommentsSection({ billId, user, onCommentAdded }) {
   }, [billId]);
 
   const fetchComments = async () => {
+    if (!billId) {
+      setError("Bill ID is required");
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    setError("");
     try {
       const data = await getBillComments(billId);
-      setComments(data || []);
-    } catch {
-      setError("Failed to load comments");
+      setComments(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Fetch comments error:", err);
+      setError(err.message || "Failed to load comments");
+      setComments([]);
     } finally {
       setLoading(false);
     }

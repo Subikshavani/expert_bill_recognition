@@ -9,8 +9,8 @@ export default function TripAnalyticsPage({ user }) {
   const [error, setError] = useState("");
 
   const handleFetchAnalytics = async () => {
-    if (!sessionId) {
-      setError("Session ID is required");
+    if (!sessionId || !sessionId.trim()) {
+      setError("Please enter a valid Session ID");
       return;
     }
     setLoading(true);
@@ -20,12 +20,20 @@ export default function TripAnalyticsPage({ user }) {
       try {
         await computeTripAnalytics(sessionId);
       } catch {
-        // If compute fails, just fetch existing
+        // If compute fails, continue to fetch existing
+        console.warn("Analytics computation skipped, fetching existing data...");
       }
       const data = await getTripAnalytics(sessionId);
-      setAnalytics(data);
+      if (!data) {
+        setError("No analytics found for this session");
+        setAnalytics(null);
+      } else {
+        setAnalytics(data);
+      }
     } catch (err) {
-      setError(err.message || "Failed to load analytics");
+      console.error("Fetch analytics error:", err);
+      setError(err.message || "Failed to load analytics. Please verify the session ID.");
+      setAnalytics(null);
     } finally {
       setLoading(false);
     }
@@ -35,6 +43,47 @@ export default function TripAnalyticsPage({ user }) {
     return (
       <section className="panel rounded-2xl p-6 shadow-panel">
         <p className="text-slate-400">Loading analytics...</p>
+      </section>
+    );
+  }
+
+  if (error && !analytics && !loading) {
+    return (
+      <section className="space-y-5">
+        <div className="panel rounded-2xl p-6 shadow-panel">
+          <h2 className="page-title text-2xl font-bold">Trip Analytics</h2>
+          <p className="mt-2 text-sm text-slate-400">View spending breakdown and trip summary</p>
+        </div>
+
+        <div className="panel rounded-2xl p-6 shadow-panel">
+          <h3 className="text-lg font-semibold mb-4">Search Trip</h3>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={sessionId}
+              onChange={(e) => setSessionId(e.target.value)}
+              placeholder="Enter Session ID (e.g., TRIP-1234567890)"
+              className="flex-1 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
+            />
+            <button
+              onClick={handleFetchAnalytics}
+              className="px-6 py-2.5 rounded-xl bg-cyan-500 text-white font-semibold hover:bg-cyan-600 transition-colors"
+            >
+              Load
+            </button>
+          </div>
+          {error && (
+            <div className="mt-4 p-4 rounded-lg border border-rose-200/30 bg-rose-500/5 dark:border-rose-800/30 dark:bg-rose-900/10">
+              <p className="text-sm text-rose-600 dark:text-rose-400 mb-3">{error}</p>
+              <button
+                onClick={handleFetchAnalytics}
+                className="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 font-medium transition-colors text-sm"
+              >
+                Try Again
+              </button>
+            </div>
+          )}
+        </div>
       </section>
     );
   }
