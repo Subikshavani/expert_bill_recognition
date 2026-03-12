@@ -1,0 +1,66 @@
+@import url("https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --page-bg: #030712;
+  --panel-bg: rgba(15, 23, 42, 0.65);
+  --panel-border: rgba(148, 163, 184, 0.18);
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+}
+
+.dark {
+  --page-bg: #030712;
+  --panel-bg: rgba(15, 23, 42, 0.65);
+  --panel-border: rgba(148, 163, 184, 0.18);
+  --text-main: #e2e8f0;
+  --text-muted: #94a3b8;
+}
+
+body {
+  margin: 0;
+  font-family: "Manrope", sans-serif;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(56, 189, 248, 0.16), transparent 32%),
+    radial-gradient(circle at 90% 10%, rgba(139, 92, 246, 0.2), transparent 36%),
+    linear-gradient(160deg, #020617 0%, #0b1120 45%, #111827 100%),
+    var(--page-bg);
+  color: var(--text-main);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.panel {
+  background-color: var(--panel-bg);
+  border: 1px solid var(--panel-border);
+  backdrop-filter: blur(14px);
+}
+
+.page-title {
+  font-family: "Space Grotesk", sans-serif;
+}
+
+.fade-up {
+  animation: fadeUp 480ms ease both;
+}
+
+button,
+a {
+  transition: all 200ms ease;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

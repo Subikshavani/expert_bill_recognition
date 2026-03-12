@@ -1,0 +1,137 @@
+export const statistics = [
+  { label: "Total Bills Submitted", value: 486, delta: "+12% this month" },
+  { label: "Bills Pending Approval", value: 74, delta: "18 need manager review" },
+  { label: "Approved Bills", value: 372, delta: "76.5% approval rate" },
+  { label: "Rejected Bills", value: 40, delta: "8.2% rejection rate" },
+  { label: "Total Expense Amount", value: "$1,248,920", delta: "+8.4% vs last quarter" },
+];
+
+export const chartStatusData = [
+  { name: "Uploaded", value: 46 },
+  { name: "Accounts Review", value: 62 },
+  { name: "Manager Approval", value: 28 },
+  { name: "Finance Approval", value: 22 },
+  { name: "Approved", value: 302 },
+  { name: "Rejected", value: 26 },
+];
+
+export const monthlyExpenseData = [
+  { month: "Jan", amount: 152000 },
+  { month: "Feb", amount: 164200 },
+  { month: "Mar", amount: 170500 },
+  { month: "Apr", amount: 183400 },
+  { month: "May", amount: 194600 },
+  { month: "Jun", amount: 188000 },
+  { month: "Jul", amount: 205900 },
+  { month: "Aug", amount: 210500 },
+  { month: "Sep", amount: 198100 },
+  { month: "Oct", amount: 212300 },
+  { month: "Nov", amount: 223700 },
+  { month: "Dec", amount: 235600 },
+];
+
+export const usersData = [
+  { id: "USR-001", name: "Maya Thomas", email: "maya.thomas@org.com", role: "Reception", department: "Admin", status: "Active" },
+  { id: "USR-002", name: "Arun Prakash", email: "arun.prakash@org.com", role: "Accounts Staff", department: "Accounts", status: "Active" },
+  { id: "USR-003", name: "Nina Roy", email: "nina.roy@org.com", role: "Manager", department: "Operations", status: "Active" },
+  { id: "USR-004", name: "Rajat Sen", email: "rajat.sen@org.com", role: "Finance Team", department: "Finance", status: "Inactive" },
+  { id: "USR-005", name: "Lina Das", email: "lina.das@org.com", role: "Auditor", department: "Compliance", status: "Active" },
+];
+
+export const billsData = [
+  {
+    id: "BILL-2401",
+    billNumber: "EXP-2026-101",
+    vendor: "Metro Fuel Station",
+    category: "Fuel",
+    amount: 1280,
+    date: "2026-03-03",
+    department: "Logistics",
+    status: "Manager Approval",
+    uploadedBy: "Maya Thomas",
+    stage: 3,
+  },
+  {
+    id: "BILL-2402",
+    billNumber: "EXP-2026-102",
+    vendor: "Skyline Hotels",
+    category: "Hotel",
+    amount: 8500,
+    date: "2026-03-05",
+    department: "Sales",
+    status: "Finance Approval",
+    uploadedBy: "Arun Prakash",
+    stage: 4,
+  },
+  {
+    id: "BILL-2403",
+    billNumber: "EXP-2026-103",
+    vendor: "Swift Couriers",
+    category: "Courier",
+    amount: 420,
+    date: "2026-03-06",
+    department: "Procurement",
+    status: "Under Accounts Review",
+    uploadedBy: "Maya Thomas",
+    stage: 2,
+  },
+  {
+    id: "BILL-2404",
+    billNumber: "EXP-2026-104",
+    vendor: "Aero Travels",
+    category: "Travel",
+    amount: 15900,
+    date: "2026-03-07",
+    department: "Executive",
+    status: "Approved",
+    uploadedBy: "Arun Prakash",
+    stage: 5,
+  },
+  {
+    id: "BILL-2405",
+    billNumber: "EXP-2026-105",
+    vendor: "Metro Fuel Station",
+    category: "Fuel",
+    amount: 960,
+    date: "2026-03-08",
+    department: "Field Ops",
+    status: "Rejected",
+    uploadedBy: "Maya Thomas",
+    stage: 5,
+  },
+];
+
+export const auditTrailData = [
+  {
+    id: "AUD-7812",
+    billId: "BILL-2401",
+    action: "Submitted",
+    user: "Maya Thomas",
+    timestamp: "2026-03-03 10:14",
+    comments: "Original invoice attached",
+  },
+  {
+    id: "AUD-7813",
+    billId: "BILL-2401",
+    action: "Accounts Verified",
+    user: "Arun Prakash",
+    timestamp: "2026-03-03 15:46",
+    comments: "Values reconciled with PO",
+  },
+  {
+    id: "AUD-7814",
+    billId: "BILL-2402",
+    action: "Manager Approved",
+    user: "Nina Roy",
+    timestamp: "2026-03-05 18:03",
+    comments: "Business travel justified",
+  },
+  {
+    id: "AUD-7815",
+    billId: "BILL-2405",
+    action: "Rejected",
+    user: "Rajat Sen",
+    timestamp: "2026-03-09 12:20",
+    comments: "Missing GST details",
+  },
+];
