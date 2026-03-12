@@ -130,8 +130,9 @@ function parseBillText(rawText) {
     ]) || lines[0] || "";
 
   const billNumber = extractFirstMatch(rawText, [
-    /(?:bill|invoice|inv)\s*(?:no|number|#)?\s*[:#\-]?\s*([A-Z0-9\-\/]{4,})/i,
-    /(?:receipt)\s*(?:no|#)?\s*[:#\-]?\s*([A-Z0-9\-\/]{4,})/i,
+    /(?:bill|invoice|inv)\s+(?:no\.?|number|#)\s*[:#\-]?\s*([A-Z0-9\-\/]{4,})/i,
+    /(?:receipt)\s+(?:no\.?|#)\s*[:#\-]?\s*([A-Z0-9\-\/]{4,})/i,
+    /(?:bill|invoice)\s*[:#]\s*([A-Z0-9\-\/]{4,})/i,
   ]);
 
   const rawDate = extractFirstMatch(rawText, [
@@ -159,6 +160,61 @@ function parseBillText(rawText) {
     category: inferCategory(rawText),
     rawText,
   };
+}
+
+// Runs OCR on uploaded file buffers and stores result in bill_ocr_results.
+// Fire-and-forget: called after bill is saved so it doesn't delay the response.
+async function runOCRAndStore(billId, multerFiles, billRecord) {
+  // Pick the first billFile, fall back to any uploaded file
+  const allFiles = [
+    ...(multerFiles?.billFile || []),
+    ...(multerFiles?.supportFile || []),
+  ];
+  if (allFiles.length === 0) return;
+
+  const file = allFiles[0];
+  try {
+    let rawText = "";
+    let confidence = 0;
+
+    if (file.mimetype === "application/pdf") {
+      const pdfResult = await pdfParse(file.buffer);
+      rawText = (pdfResult?.text || "").trim();
+      confidence = 0.95;
+    } else {
+      const ocrResult = await Tesseract.recognize(file.buffer, "eng", { logger: () => {} });
+      rawText = (ocrResult?.data?.text || "").trim();
+      confidence = (ocrResult?.data?.confidence || 0) / 100;
+    }
+
+    const parsed = rawText ? parseBillText(rawText) : {};
+
+    await BillOCRResult.create({
+      billId,
+      vendor: parsed.vendor || billRecord.vendor || "",
+      billNumber: parsed.billNumber || billRecord.bill_number || "",
+      date: parsed.date || billRecord.date || "",
+      amount: parsed.amount !== null && parsed.amount !== undefined ? parsed.amount : billRecord.amount || null,
+      tax: parsed.taxAmount || null,
+      category: parsed.category || billRecord.category || "",
+      rawText: rawText || "",
+      confidence,
+      status: rawText ? "success" : "failed",
+      errorMessage: rawText ? "" : "No text extracted from uploaded file",
+      processedAt: new Date(),
+    });
+
+    console.log(`✅ OCR stored for ${billId} (confidence: ${(confidence * 100).toFixed(1)}%)`);
+  } catch (err) {
+    console.error(`❌ OCR failed for ${billId}:`, err.message);
+    // Store failed attempt so it's visible in bill_ocr_results
+    await BillOCRResult.create({
+      billId,
+      status: "failed",
+      errorMessage: err.message,
+      processedAt: new Date(),
+    }).catch(() => {});
+  }
 }
 
 app.post("/api/ocr-bill", upload.single("billFile"), async (req, res) => {
@@ -403,6 +459,11 @@ app.post(
         comments: `Files: ${files.join(", ") || "none"}`,
       }).save();
 
+      // Auto-OCR: run in background so upload response is not delayed
+      if (req.files && (req.files.billFile || req.files.supportFile)) {
+        runOCRAndStore(id, req.files, billData).catch(() => {});
+      }
+
       res.status(201).json(parseBillRow(billData));
     } catch (error) {
       res.status(500).json({ error: "Failed to create bill." });
@@ -463,6 +524,11 @@ app.post(
         timestamp: nowTs(),
         comments: `Files: ${files.join(", ") || "none"}`,
       }).save();
+
+      // Auto-OCR: run in background so upload response is not delayed
+      if (req.files && (req.files.billFile || req.files.supportFile)) {
+        runOCRAndStore(id, req.files, billData).catch(() => {});
+      }
 
       res.status(201).json(parseBillRow(billData));
     } catch (error) {
