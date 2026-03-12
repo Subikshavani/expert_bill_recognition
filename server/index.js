@@ -93,6 +93,21 @@ function parseUserRow(doc) {
   };
 }
 
+function parseTripSession(doc) {
+  if (!doc) return null;
+  return {
+    sessionId: doc.sessionId,
+    employeeId: doc.employeeId,
+    employeeEmail: doc.employeeEmail,
+    tripName: doc.tripName,
+    startDate: doc.startDate,
+    endDate: doc.endDate || "",
+    sessionStatus: doc.sessionStatus,
+    createdAt: doc.createdAt,
+    updatedAt: doc.updatedAt,
+  };
+}
+
 function normalizeDate(raw) {
   if (!raw) return "";
   const parsed = new Date(raw.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1"));
@@ -1016,6 +1031,113 @@ app.post("/api/ocr-results/:billId/reprocess", upload.single("file"), async (req
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to reprocess OCR.", message: error.message });
+  }
+});
+
+/**
+ * Get Active or Latest Trip Session
+ * GET /api/trip-session?email=<email>
+ */
+app.get("/api/trip-session", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required." });
+    }
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const session = await TripSession.findOne({
+      employeeEmail: normalizedEmail,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(session ? parseTripSession(session) : null);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch trip session." });
+  }
+});
+
+/**
+ * Get All Trip Sessions
+ * GET /api/trip-sessions?email=<email>
+ */
+app.get("/api/trip-sessions", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) {
+      return res.status(400).json({ error: "Email is required." });
+    }
+    const normalizedEmail = String(email).toLowerCase().trim();
+    const sessions = await TripSession.find({
+      employeeEmail: normalizedEmail,
+    })
+      .sort({ createdAt: -1 })
+      .lean();
+    res.json(sessions.map(parseTripSession));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch trip sessions." });
+  }
+});
+
+/**
+ * Start New Trip Session
+ * POST /api/trip-session/start
+ */
+app.post("/api/trip-session/start", async (req, res) => {
+  try {
+    const { employeeId, employeeEmail, tripName, startDate } = req.body;
+    if (!employeeId || !employeeEmail || !tripName || !startDate) {
+      return res.status(400).json({
+        error: "employeeId, employeeEmail, tripName, and startDate are required.",
+      });
+    }
+    const normalizedEmail = String(employeeEmail).toLowerCase().trim();
+    // End any existing active session for this employee
+    await TripSession.updateMany(
+      { employeeEmail: normalizedEmail, sessionStatus: "Active" },
+      { sessionStatus: "Completed", endDate: new Date().toISOString().split("T")[0] }
+    );
+    // Create new session
+    const sessionId = `TRIP-${Date.now()}`;
+    const newSession = await TripSession.create({
+      sessionId,
+      employeeId,
+      employeeEmail: normalizedEmail,
+      tripName,
+      startDate,
+      endDate: "",
+      sessionStatus: "Active",
+    });
+    res.status(201).json(parseTripSession(newSession));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to start trip session." });
+  }
+});
+
+/**
+ * End Trip Session
+ * PATCH /api/trip-session/:sessionId/end
+ */
+app.patch("/api/trip-session/:sessionId/end", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { endDate } = req.body;
+    if (!sessionId) {
+      return res.status(400).json({ error: "Session ID is required." });
+    }
+    const updated = await TripSession.findOneAndUpdate(
+      { sessionId },
+      {
+        sessionStatus: "Completed",
+        endDate: endDate || new Date().toISOString().split("T")[0],
+      },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ error: "Trip session not found." });
+    }
+    res.json(parseTripSession(updated));
+  } catch (error) {
+    res.status(500).json({ error: "Failed to end trip session." });
   }
 });
 
