@@ -13,6 +13,11 @@ import EmployeeHomePage from "./pages/EmployeeHomePage";
 import EmployeeUploadBillPage from "./pages/EmployeeUploadBillPage";
 import EmployeeMyBillsPage from "./pages/EmployeeMyBillsPage";
 import EmployeeBillStatusPage from "./pages/EmployeeBillStatusPage";
+import BillTemplatesPage from "./pages/BillTemplatesPage";
+import BudgetManagementPage from "./pages/BudgetManagementPage";
+import VendorManagementPage from "./pages/VendorManagementPage";
+import AdvanceRequestsPage from "./pages/AdvanceRequestsPage";
+import TripAnalyticsPage from "./pages/TripAnalyticsPage";
 
 const adminNavConfig = [
   { path: "/dashboard", label: "Dashboard", permission: PERMISSIONS.DASHBOARD, icon: "dashboard" },
@@ -137,6 +142,11 @@ export default function App() {
         <Route path="upload-bill" element={<EmployeeUploadBillPage user={employeeSession?.user} />} />
         <Route path="my-bills" element={<EmployeeMyBillsPage user={employeeSession?.user} />} />
         <Route path="bill-status" element={<EmployeeBillStatusPage user={employeeSession?.user} />} />
+        <Route path="templates" element={<BillTemplatesPage user={employeeSession?.user} />} />
+        <Route path="budgets" element={<BudgetManagementPage user={employeeSession?.user} />} />
+        <Route path="vendors" element={<VendorManagementPage user={employeeSession?.user} />} />
+        <Route path="advances" element={<AdvanceRequestsPage user={employeeSession?.user} />} />
+        <Route path="analytics" element={<TripAnalyticsPage user={employeeSession?.user} />} />
       </Route>
 
       <Route path="/*" element={<AdminApp />} />

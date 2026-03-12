@@ -4,7 +4,7 @@ const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const Tesseract = require("tesseract.js");
 const pdfParse = require("pdf-parse");
-const { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, initDatabase } = require("./db");
+const { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, BillTemplate, BudgetLimit, Vendor, BillComment, AdvanceRequest, EnhancedAuditLog, TripAnalytics, initDatabase } = require("./db");
 
 const app = express();
 
@@ -1138,6 +1138,437 @@ app.patch("/api/trip-session/:sessionId/end", async (req, res) => {
     res.json(parseTripSession(updated));
   } catch (error) {
     res.status(500).json({ error: "Failed to end trip session." });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 📋 BILL TEMPLATES
+// ═══════════════════════════════════════════════════════════════════════
+
+app.post("/api/bill-templates", async (req, res) => {
+  try {
+    const { employeeEmail, templateName, vendor, category, description } = req.body;
+    if (!employeeEmail || !templateName || !vendor || !category) {
+      return res.status(400).json({ error: "Required fields missing." });
+    }
+    const templateId = `TMPL-${Date.now()}`;
+    const template = await BillTemplate.create({
+      templateId,
+      employeeEmail: employeeEmail.toLowerCase().trim(),
+      templateName,
+      vendor,
+      category,
+      description,
+    });
+    res.status(201).json(template);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create template." });
+  }
+});
+
+app.get("/api/bill-templates", async (req, res) => {
+  try {
+    const { email } = req.query;
+    if (!email) return res.status(400).json({ error: "Email is required." });
+    const templates = await BillTemplate.find({
+      employeeEmail: email.toLowerCase().trim(),
+      isActive: true,
+    }).lean();
+    res.json(templates);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch templates." });
+  }
+});
+
+app.delete("/api/bill-templates/:templateId", async (req, res) => {
+  try {
+    const { templateId } = req.params;
+    await BillTemplate.findOneAndUpdate({ templateId }, { isActive: false }, { new: true });
+    res.json({ message: "Template deleted." });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete template." });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 💰 BUDGET MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════
+
+app.post("/api/budgets", async (req, res) => {
+  try {
+    const { department, employeeEmail, budgetType, monthlyLimit, year, month } = req.body;
+    if (!department || !budgetType || !monthlyLimit || !year || !month) {
+      return res.status(400).json({ error: "Required fields missing." });
+    }
+    const budgetId = `BUD-${Date.now()}`;
+    const budget = await BudgetLimit.create({
+      budgetId,
+      department,
+      employeeEmail: employeeEmail ? employeeEmail.toLowerCase().trim() : "",
+      budgetType,
+      monthlyLimit,
+      year,
+      month,
+      remaining: monthlyLimit,
+    });
+    res.status(201).json(budget);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create budget." });
+  }
+});
+
+app.get("/api/budgets", async (req, res) => {
+  try {
+    const { department, email, year, month } = req.query;
+    const query = {};
+    if (department) query.department = department;
+    if (email) query.employeeEmail = email.toLowerCase().trim();
+    if (year && month) {
+      query.year = parseInt(year);
+      query.month = parseInt(month);
+    }
+    const budgets = await BudgetLimit.find(query).lean();
+    res.json(budgets);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch budgets." });
+  }
+});
+
+app.patch("/api/budgets/:budgetId/update-spent", async (req, res) => {
+  try {
+    const { budgetId } = req.params;
+    const { spentAmount } = req.body;
+    if (spentAmount === undefined) {
+      return res.status(400).json({ error: "Spent amount is required." });
+    }
+    const budget = await BudgetLimit.findOne({ budgetId });
+    if (!budget) return res.status(404).json({ error: "Budget not found." });
+    budget.spent += spentAmount;
+    budget.remaining = Math.max(0, budget.monthlyLimit - budget.spent);
+    await budget.save();
+    res.json(budget);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update budget." });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 🏢 VENDOR MANAGEMENT
+// ═══════════════════════════════════════════════════════════════════════
+
+app.post("/api/vendors", async (req, res) => {
+  try {
+    const { vendorName, contactEmail, contactPhone, category } = req.body;
+    if (!vendorName) return res.status(400).json({ error: "Vendor name is required." });
+    const vendorId = `VENDOR-${Date.now()}`;
+    const vendor = await Vendor.create({
+      vendorId,
+      vendorName,
+      contactEmail,
+      contactPhone,
+      category,
+    });
+    res.status(201).json(vendor);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create vendor." });
+  }
+});
+
+app.get("/api/vendors", async (req, res) => {
+  try {
+    const { status } = req.query;
+    const query = status ? { status } : {};
+    const vendors = await Vendor.find(query).lean();
+    res.json(vendors);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch vendors." });
+  }
+});
+
+app.patch("/api/vendors/:vendorId/status", async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+    const { status } = req.body;
+    if (!["approved", "blacklisted", "pending"].includes(status)) {
+      return res.status(400).json({ error: "Invalid status." });
+    }
+    const vendor = await Vendor.findOneAndUpdate({ vendorId }, { status }, { new: true });
+    if (!vendor) return res.status(404).json({ error: "Vendor not found." });
+    res.json(vendor);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to update vendor status." });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 💬 BILL COMMENTS & APPROVAL NOTES
+// ═══════════════════════════════════════════════════════════════════════
+
+app.post("/api/bill-comments", async (req, res) => {
+  try {
+    const { billId, authorEmail, authorName, comment, commentType, parentCommentId } = req.body;
+    if (!billId || !authorEmail || !comment || !commentType) {
+      return res.status(400).json({ error: "Required fields missing." });
+    }
+    const commentId = `CMT-${Date.now()}`;
+    const newComment = await BillComment.create({
+      commentId,
+      billId,
+      authorEmail: authorEmail.toLowerCase().trim(),
+      authorName,
+      comment,
+      commentType,
+      parentCommentId: parentCommentId || "",
+    });
+    res.status(201).json(newComment);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create comment." });
+  }
+});
+
+app.get("/api/bill-comments/:billId", async (req, res) => {
+  try {
+    const { billId } = req.params;
+    const comments = await BillComment.find({ billId }).sort({ createdAt: 1 }).lean();
+    res.json(comments);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch comments." });
+  }
+});
+
+app.delete("/api/bill-comments/:commentId", async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    await BillComment.findOneAndDelete({ commentId });
+    res.json({ message: "Comment deleted." });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete comment." });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 💳 ADVANCE REQUESTS
+// ═══════════════════════════════════════════════════════════════════════
+
+app.post("/api/advance-requests", async (req, res) => {
+  try {
+    const { employeeEmail, employeeName, tripName, amount, purpose, requestDate } = req.body;
+    if (!employeeEmail || !tripName || !amount || !purpose) {
+      return res.status(400).json({ error: "Required fields missing." });
+    }
+    const advanceId = `ADV-${Date.now()}`;
+    const request = await AdvanceRequest.create({
+      advanceId,
+      employeeEmail: employeeEmail.toLowerCase().trim(),
+      employeeName,
+      tripName,
+      amount,
+      purpose,
+      requestDate,
+    });
+    res.status(201).json(request);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create advance request." });
+  }
+});
+
+app.get("/api/advance-requests", async (req, res) => {
+  try {
+    const { email, status } = req.query;
+    const query = {};
+    if (email) query.employeeEmail = email.toLowerCase().trim();
+    if (status) query.requestStatus = status;
+    const requests = await AdvanceRequest.find(query).sort({ createdAt: -1 }).lean();
+    res.json(requests);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch advance requests." });
+  }
+});
+
+app.patch("/api/advance-requests/:advanceId/approve", async (req, res) => {
+  try {
+    const { advanceId } = req.params;
+    const { approverEmail, approvalComments } = req.body;
+    const request = await AdvanceRequest.findOneAndUpdate(
+      { advanceId },
+      {
+        requestStatus: "approved",
+        approverEmail: approverEmail.toLowerCase().trim(),
+        approvalDate: new Date().toISOString().split("T")[0],
+        approvalComments,
+      },
+      { new: true }
+    );
+    if (!request) return res.status(404).json({ error: "Advance request not found." });
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to approve advance request." });
+  }
+});
+
+app.patch("/api/advance-requests/:advanceId/settle", async (req, res) => {
+  try {
+    const { advanceId } = req.params;
+    const { settlementAmount } = req.body;
+    const request = await AdvanceRequest.findOneAndUpdate(
+      { advanceId },
+      {
+        requestStatus: "settled",
+        settlementAmount,
+        settlementDate: new Date().toISOString().split("T")[0],
+      },
+      { new: true }
+    );
+    if (!request) return res.status(404).json({ error: "Advance request not found." });
+    res.json(request);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to settle advance request." });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 📊 TRIP ANALYTICS
+// ═══════════════════════════════════════════════════════════════════════
+
+app.post("/api/trip-analytics/compute", async (req, res) => {
+  try {
+    const { sessionId } = req.body;
+    if (!sessionId) return res.status(400).json({ error: "Session ID is required." });
+    
+    const session = await TripSession.findOne({ sessionId }).lean();
+    if (!session) return res.status(404).json({ error: "Session not found." });
+
+    const bills = await Bill.find({
+      notes: { $regex: sessionId },
+      uploaded_by_email: session.employeeEmail,
+    }).lean();
+
+    const categoryBreakdown = {};
+    let totalAmount = 0, approvedAmount = 0, pendingAmount = 0, rejectedAmount = 0;
+
+    bills.forEach((bill) => {
+      totalAmount += bill.amount;
+      if (bill.status === "Approved") approvedAmount += bill.amount;
+      else if (["Uploaded", "Under Accounts Review", "Manager Approval", "Finance Approval"].includes(bill.status))
+        pendingAmount += bill.amount;
+      else if (bill.status === "Rejected") rejectedAmount += bill.amount;
+
+      categoryBreakdown[bill.category] = (categoryBreakdown[bill.category] || 0) + bill.amount;
+    });
+
+    const analyticsId = `ANALYTICS-${Date.now()}`;
+    const analytics = await TripAnalytics.create({
+      analyticsId,
+      sessionId,
+      employeeEmail: session.employeeEmail,
+      tripName: session.tripName,
+      startDate: session.startDate,
+      endDate: session.endDate,
+      totalBills: bills.length,
+      totalAmount,
+      approvedAmount,
+      pendingAmount,
+      rejectedAmount,
+      categoryBreakdown,
+    });
+
+    res.json(analytics);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to compute analytics." });
+  }
+});
+
+app.get("/api/trip-analytics/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const analytics = await TripAnalytics.findOne({ sessionId }).lean();
+    if (!analytics) return res.status(404).json({ error: "Analytics not found." });
+    res.json(analytics);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch analytics." });
+  }
+});
+
+// ═══════════════════════════════════════════════════════════════════════
+// 🔐 ENHANCED AUDIT LOGGING
+// ═══════════════════════════════════════════════════════════════════════
+
+function getClientIp(req) {
+  return req.headers["x-forwarded-for"]?.split(",")[0] || req.socket.remoteAddress || "unknown";
+}
+
+app.post("/api/audit-logs", async (req, res) => {
+  try {
+    const { userId, userEmail, userName, action, entityType, entityId, changes } = req.body;
+    if (!action || !entityType || !entityId) {
+      return res.status(400).json({ error: "Required fields missing." });
+    }
+    const auditId = `AUL-${Date.now()}`;
+    const log = await EnhancedAuditLog.create({
+      auditId,
+      userId: userId || "",
+      userEmail: userEmail.toLowerCase().trim(),
+      userName,
+      action,
+      entityType,
+      entityId,
+      ipAddress: getClientIp(req),
+      userAgent: req.headers["user-agent"] || "",
+      changes: changes || {},
+      timestamp: nowTs(),
+      complianceLevel: "high",
+    });
+    res.status(201).json(log);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to create audit log." });
+  }
+});
+
+app.get("/api/audit-logs", async (req, res) => {
+  try {
+    const { entityType, entityId, userEmail, limit = 100 } = req.query;
+    const query = {};
+    if (entityType) query.entityType = entityType;
+    if (entityId) query.entityId = entityId;
+    if (userEmail) query.userEmail = userEmail.toLowerCase().trim();
+    
+    const logs = await EnhancedAuditLog.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit))
+      .lean();
+    res.json(logs);
+  } catch (error) {
+    res.status(500).json({ error: "Failed to fetch audit logs." });
+  }
+});
+
+app.get("/api/audit-logs/report", async (req, res) => {
+  try {
+    const { startDate, endDate, complianceLevel } = req.query;
+    const query = {};
+    if (startDate && endDate) {
+      query.timestamp = { $gte: startDate, $lte: endDate };
+    }
+    if (complianceLevel) query.complianceLevel = complianceLevel;
+
+    const logs = await EnhancedAuditLog.find(query)
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const summary = {
+      totalEvents: logs.length,
+      actionSummary: {},
+      userViews: {},
+    };
+
+    logs.forEach((log) => {
+      summary.actionSummary[log.action] = (summary.actionSummary[log.action] || 0) + 1;
+      summary.userViews[log.userEmail] = (summary.userViews[log.userEmail] || 0) + 1;
+    });
+
+    res.json({ logs, summary });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to generate audit report." });
   }
 });
 
