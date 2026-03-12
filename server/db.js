@@ -109,10 +109,24 @@ const billOCRResultSchema = new mongoose.Schema(
   }
 );
 
+const tripSessionSchema = new mongoose.Schema(
+  {
+    sessionId:     { type: String, required: true, unique: true },
+    employeeId:    { type: String, required: true },
+    employeeEmail: { type: String, required: true },
+    tripName:      { type: String, required: true },
+    startDate:     { type: String, required: true },
+    endDate:       { type: String, default: "" },
+    sessionStatus: { type: String, enum: ["Active", "Completed"], default: "Active" },
+  },
+  { timestamps: true, collection: "tripSessions" }
+);
+
 const User = mongoose.model("User", userSchema);
 const Bill = mongoose.model("Bill", billSchema);
 const AuditEvent = mongoose.model("AuditEvent", auditSchema);
 const MonthlyExpense = mongoose.model("MonthlyExpense", monthlyExpenseSchema);
 const BillOCRResult = mongoose.model("BillOCRResult", billOCRResultSchema);
+const TripSession = mongoose.model("TripSession", tripSessionSchema);
 
-module.exports = { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, initDatabase };
+module.exports = { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, initDatabase };

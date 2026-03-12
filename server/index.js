@@ -4,7 +4,7 @@ const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const Tesseract = require("tesseract.js");
 const pdfParse = require("pdf-parse");
-const { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, initDatabase } = require("./db");
+const { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, initDatabase } = require("./db");
 
 const app = express();
 
@@ -486,11 +486,26 @@ app.post(
         notes = "",
         employeeEmail,
         employeeName,
+        sessionId = "",
       } = req.body;
 
       if (!billNumber || !vendorName || !amount || !date || !department || !employeeEmail) {
         return res.status(400).json({ error: "Required fields missing." });
       }
+
+      // ── Trip Session Guard ────────────────────────────────────────────────
+      const normalizedEmail = String(employeeEmail).toLowerCase().trim();
+      const activeSession = await TripSession.findOne({
+        employeeEmail: normalizedEmail,
+        sessionStatus: "Active",
+      }).lean();
+
+      if (!activeSession) {
+        return res.status(403).json({
+          error: "Trip session ended. Bill uploads are no longer allowed.",
+        });
+      }
+      // ─────────────────────────────────────────────────────────────────────
 
       const files = [];
       if (req.files?.billFile) files.push(...req.files.billFile.map((f) => f.originalname));
@@ -507,8 +522,8 @@ app.post(
         department,
         status: "Uploaded",
         uploaded_by: employeeName || employeeEmail,
-        uploaded_by_email: String(employeeEmail).toLowerCase().trim(),
-        notes,
+        uploaded_by_email: normalizedEmail,
+        notes: notes + (activeSession.sessionId ? ` [Session: ${activeSession.sessionId} – ${activeSession.tripName}]` : ""),
         stage: 1,
         files,
       };

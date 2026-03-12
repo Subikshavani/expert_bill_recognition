@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { apiFetch } from "../api/client";
 import Button from "../components/Button";
 import FileUpload from "../components/FileUpload";
 import FormInput from "../components/FormInput";
+import { getActiveSession } from "../api/tripSession";
 
 const initialForm = {
   billNumber: "",
@@ -22,6 +24,17 @@ export default function EmployeeUploadBillPage({ user }) {
   const [scanning, setScanning] = useState(false);
   const [ocrRawText, setOcrRawText] = useState("");
   const [error, setError] = useState("");
+
+  const [session, setSession] = useState(null);
+  const [sessionLoading, setSessionLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    getActiveSession(user.email)
+      .then((s) => setSession(s))
+      .catch(() => setSession(null))
+      .finally(() => setSessionLoading(false));
+  }, [user?.email]);
 
   const scanBillWithOcr = async () => {
     if (!billFiles.length) {
@@ -65,6 +78,7 @@ export default function EmployeeUploadBillPage({ user }) {
     formData.append("department", user?.department || "General");
     formData.append("employeeEmail", user?.email || "");
     formData.append("employeeName", user?.name || "");
+    if (session?.sessionId) formData.append("sessionId", session.sessionId);
     billFiles.forEach((file) => formData.append("billFile", file));
     supportFiles.forEach((file) => formData.append("supportFile", file));
 
@@ -81,6 +95,41 @@ export default function EmployeeUploadBillPage({ user }) {
       setSubmitting(false);
     }
   };
+
+  if (sessionLoading) {
+    return (
+      <section className="panel rounded-2xl p-6 shadow-panel flex items-center justify-center min-h-[200px]">
+        <p className="text-slate-400 text-sm">Checking trip session...</p>
+      </section>
+    );
+  }
+
+  const hasActiveSession = session && session.sessionStatus === "Active";
+
+  if (!hasActiveSession) {
+    return (
+      <section className="panel rounded-2xl p-6 shadow-panel space-y-4">
+        <h2 className="page-title text-2xl font-bold text-slate-800 dark:text-slate-100">Upload Bill</h2>
+        <div className="flex flex-col items-center justify-center gap-4 rounded-xl border border-rose-200 bg-rose-50 dark:bg-rose-900/20 dark:border-rose-800/40 p-8 text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-rose-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+          </svg>
+          <p className="text-base font-semibold text-rose-700 dark:text-rose-400">
+            No Active Trip Session
+          </p>
+          <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm">
+            Trip session ended. Bill uploads are no longer allowed. Please start a new trip session from the dashboard before submitting bills.
+          </p>
+          <Link
+            to="/employee"
+            className="mt-2 inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-cyan-600 transition-colors"
+          >
+            Go to Dashboard
+          </Link>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="panel rounded-2xl p-6 shadow-panel">
