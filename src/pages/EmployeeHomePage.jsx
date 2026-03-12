@@ -39,9 +39,9 @@ export default function EmployeeHomePage({ user }) {
           <Link
             key={card.title}
             to={card.to}
-            className="panel rounded-2xl border border-white/10 p-5 shadow-panel hover:border-cyan-300/30 hover:bg-cyan-400/5"
+            className="panel rounded-2xl border border-slate-200 p-5 shadow-panel hover:border-cyan-300/30 hover:bg-cyan-400/5"
           >
-            <h3 className="page-title text-lg font-semibold text-slate-100">{card.title}</h3>
+            <h3 className="page-title text-lg font-semibold text-slate-800">{card.title}</h3>
             <p className="mt-2 text-sm text-slate-400">{card.desc}</p>
           </Link>
         ))}

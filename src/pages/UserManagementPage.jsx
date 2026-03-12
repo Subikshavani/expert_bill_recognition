@@ -78,7 +78,7 @@ export default function UserManagementPage() {
       header: "Employee Name",
       render: (row) => (
         <div>
-          <p className="font-semibold text-slate-100">{row.name}</p>
+          <p className="font-semibold text-slate-800">{row.name}</p>
           <p className="text-xs text-slate-400">{row.email}</p>
         </div>
       ),
@@ -106,7 +106,7 @@ export default function UserManagementPage() {
           <button
             type="button"
             onClick={() => setEditingUser({ ...row })}
-            className="rounded-lg border border-cyan-300/30 px-2 py-1 text-xs text-cyan-200 hover:bg-cyan-400/10"
+            className="rounded-lg border border-cyan-300/30 px-2 py-1 text-xs text-cyan-600 hover:bg-cyan-400/10"
           >
             Edit
           </button>
@@ -120,7 +120,7 @@ export default function UserManagementPage() {
           <button
             type="button"
             onClick={() => toggleStatus(row.id)}
-            className="rounded-lg border border-white/15 px-2 py-1 text-xs text-slate-200 hover:bg-white/5"
+            className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-100"
           >
             {row.status === "Active" ? "Deactivate" : "Activate"}
           </button>
@@ -133,7 +133,7 @@ export default function UserManagementPage() {
     <section className="space-y-6">
       <div className="panel rounded-2xl p-5 shadow-panel">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="page-title text-xl font-bold text-slate-100">User Management</h2>
+          <h2 className="page-title text-xl font-bold text-slate-800">User Management</h2>
           <p className="text-xs text-slate-400">Active employees: {activeCount}</p>
         </div>
 
@@ -159,7 +159,7 @@ export default function UserManagementPage() {
             <select
               value={form.role}
               onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}
-              className="w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
             >
               {roleOptions.map((role) => (
                 <option key={role} value={role} className="text-slate-900">
@@ -200,7 +200,7 @@ export default function UserManagementPage() {
             <button
               type="button"
               onClick={() => setEditingUser(null)}
-              className="rounded-lg border border-white/15 px-3 py-2 text-xs text-slate-200"
+              className="rounded-lg border border-slate-200 px-3 py-2 text-xs text-slate-700"
             >
               Cancel
             </button>

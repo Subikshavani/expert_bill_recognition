@@ -8,9 +8,9 @@ const defaultStages = [
 
 export default function ProgressTracker({ stage = 1, stages = defaultStages, timeline = [] }) {
   return (
-    <div className="space-y-5 rounded-2xl border border-white/10 bg-slate-900/60 p-5 backdrop-blur-md">
+    <div className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 backdrop-blur-md">
       <div>
-        <h3 className="page-title text-base font-bold text-slate-100">Bill Progress</h3>
+        <h3 className="page-title text-base font-bold text-slate-800">Bill Progress</h3>
         <p className="text-xs text-slate-400">Track approval checkpoints in real time.</p>
       </div>
 
@@ -19,18 +19,18 @@ export default function ProgressTracker({ stage = 1, stages = defaultStages, tim
           const current = index + 1;
           const reached = current <= stage;
           return (
-            <div key={name} className="rounded-xl border border-white/10 bg-slate-950/50 p-3">
+            <div key={name} className="rounded-xl border border-slate-200 bg-white p-3">
               <div className="flex items-center gap-2">
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
                     reached
                       ? "bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.65)]"
-                      : "bg-slate-700 text-slate-300"
+                      : "bg-slate-700 text-slate-600"
                   }`}
                 >
                   {current}
                 </span>
-                <p className="text-xs font-semibold text-slate-300">{name}</p>
+                <p className="text-xs font-semibold text-slate-600">{name}</p>
               </div>
             </div>
           );
@@ -42,8 +42,8 @@ export default function ProgressTracker({ stage = 1, stages = defaultStages, tim
         {timeline.length ? (
           <ul className="space-y-2">
             {timeline.map((item, idx) => (
-              <li key={`${item.billId}-${idx}`} className="rounded-xl border border-white/10 bg-slate-950/50 p-3 text-xs text-slate-300">
-                <p className="font-semibold text-cyan-200">{item.action}</p>
+              <li key={`${item.billId}-${idx}`} className="rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
+                <p className="font-semibold text-cyan-600">{item.action}</p>
                 <p>
                   {item.user} • {item.timestamp}
                 </p>
@@ -52,7 +52,7 @@ export default function ProgressTracker({ stage = 1, stages = defaultStages, tim
             ))}
           </ul>
         ) : (
-          <p className="rounded-xl border border-white/10 bg-slate-950/50 p-3 text-xs text-slate-400">No timeline events available.</p>
+          <p className="rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-400">No timeline events available.</p>
         )}
       </div>
     </div>

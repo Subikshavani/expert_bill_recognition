@@ -17,7 +17,7 @@ export default function DashboardPage() {
 
   return (
     <section className="space-y-6">
-      <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/10 p-4 text-cyan-100 shadow-[0_14px_40px_rgba(34,211,238,0.15)]">
+      <div className="rounded-2xl border border-cyan-500/30 bg-cyan-50 p-4 text-cyan-700 shadow-sm">
         <p className="text-sm font-semibold">Please add employees to start using the system.</p>
       </div>
 
@@ -29,17 +29,17 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="panel fade-up rounded-2xl p-5 shadow-panel">
-          <h3 className="page-title text-lg font-bold text-slate-100">Expense Trend Placeholder</h3>
+          <h3 className="page-title text-lg font-bold text-slate-800">Expense Trend Placeholder</h3>
           <p className="text-sm text-slate-400">Charts will unlock when bill workflows are enabled.</p>
-          <div className="mt-5 flex h-72 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-slate-950/30 text-sm text-slate-400">
+          <div className="mt-5 flex h-72 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-sm text-slate-400">
             No bill data available
           </div>
         </div>
 
         <div className="panel fade-up rounded-2xl p-5 shadow-panel">
-          <h3 className="page-title text-lg font-bold text-slate-100">Approval Pipeline Placeholder</h3>
+          <h3 className="page-title text-lg font-bold text-slate-800">Approval Pipeline Placeholder</h3>
           <p className="text-sm text-slate-400">Pending, approved, and rejected metrics appear later.</p>
-          <div className="mt-5 flex h-72 items-center justify-center rounded-2xl border border-dashed border-white/15 bg-slate-950/30 text-sm text-slate-400">
+          <div className="mt-5 flex h-72 items-center justify-center rounded-2xl border border-dashed border-slate-200 bg-slate-50/50 text-sm text-slate-400">
             Workflow visualization pending setup
           </div>
         </div>

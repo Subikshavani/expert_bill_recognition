@@ -86,7 +86,7 @@ export default function UploadBillPage() {
 
   return (
     <section className="panel rounded-2xl p-6 shadow-panel">
-      <h2 className="page-title text-2xl font-bold text-slate-100">Bill Upload</h2>
+      <h2 className="page-title text-2xl font-bold text-slate-800">Bill Upload</h2>
       <p className="mt-1 text-sm text-slate-400">Scan and submit expense bills with supporting documentation.</p>
 
       <form className="mt-6 space-y-6" onSubmit={submitBill}>
@@ -111,7 +111,7 @@ export default function UploadBillPage() {
             <select
               value={form.category}
               onChange={(event) => setForm((prev) => ({ ...prev, category: event.target.value }))}
-              className="w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
             >
               <option>Fuel</option>
               <option>Hotel</option>
@@ -153,12 +153,12 @@ export default function UploadBillPage() {
           <Button type="button" variant="secondary" onClick={scanBillWithOcr} disabled={scanning || !billFiles.length}>
             {scanning ? "Scanning Bill..." : "Scan Bill"}
           </Button>
-          {scanning ? <p className="text-sm text-cyan-300">Running OCR and extracting bill fields...</p> : null}
+          {scanning ? <p className="text-sm text-cyan-500">Running OCR and extracting bill fields...</p> : null}
         </div>
 
         {ocrRawText ? (
-          <details className="rounded-xl border border-white/10 bg-slate-950/30 p-3 text-xs text-slate-300">
-            <summary className="cursor-pointer text-cyan-300">View OCR extracted raw text</summary>
+          <details className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-xs text-slate-600">
+            <summary className="cursor-pointer text-cyan-500">View OCR extracted raw text</summary>
             <pre className="mt-2 max-h-36 overflow-auto whitespace-pre-wrap">{ocrRawText}</pre>
           </details>
         ) : null}

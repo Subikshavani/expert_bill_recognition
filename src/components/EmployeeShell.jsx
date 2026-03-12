@@ -17,7 +17,7 @@ export default function EmployeeShell({ user, onLogout }) {
   const navItems = useMemo(() => employeeNavItems, []);
 
   return (
-    <div className="min-h-screen p-4 md:p-6 text-slate-100">
+    <div className="min-h-screen p-4 md:p-6 text-slate-800">
       <Sidebar
         navItems={navItems}
         open={sidebarOpen}
@@ -35,10 +35,10 @@ export default function EmployeeShell({ user, onLogout }) {
 
         <header className="panel mb-4 rounded-2xl px-4 py-3 shadow-panel">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm text-slate-300">
-              Welcome, <span className="font-semibold text-slate-100">{user?.name || "Employee"}</span>
+            <p className="text-sm text-slate-600">
+              Welcome, <span className="font-semibold text-slate-800">{user?.name || "Employee"}</span>
             </p>
-            <p className="rounded-full border border-white/10 bg-slate-950/40 px-3 py-1 text-xs text-slate-300">
+            <p className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
               {user?.email}
             </p>
           </div>

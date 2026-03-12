@@ -29,7 +29,7 @@ export default function BillStatusTrackingPage() {
   return (
     <section className="space-y-6">
       <div className="panel rounded-2xl p-5 shadow-panel">
-        <h2 className="page-title text-2xl font-bold text-slate-100">Bill Status Tracking</h2>
+        <h2 className="page-title text-2xl font-bold text-slate-800">Bill Status Tracking</h2>
         <p className="mt-1 text-sm text-slate-400">Monitor the full lifecycle from upload to payment completion.</p>
 
         <div className="mt-4">
@@ -37,7 +37,7 @@ export default function BillStatusTrackingPage() {
           <select
             value={selectedBillId}
             onChange={(event) => setSelectedBillId(event.target.value)}
-            className="mt-2 w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100 md:w-96"
+            className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 md:w-96"
           >
             {bills.map((bill) => (
               <option key={bill.id} value={bill.id} className="text-slate-900">
@@ -53,12 +53,12 @@ export default function BillStatusTrackingPage() {
           <ProgressTracker stage={selectedBill.stage || 1} timeline={timeline} />
 
           <div className="panel rounded-2xl p-5 shadow-panel">
-            <h3 className="page-title text-lg font-bold text-slate-100">Current Bill Snapshot</h3>
+            <h3 className="page-title text-lg font-bold text-slate-800">Current Bill Snapshot</h3>
             <div className="mt-3 grid gap-3 md:grid-cols-2">
-              <p className="rounded-xl border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Bill ID:</strong> {selectedBill.id}</p>
-              <p className="rounded-xl border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Status:</strong> {selectedBill.status}</p>
-              <p className="rounded-xl border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Vendor:</strong> {selectedBill.vendor}</p>
-              <p className="rounded-xl border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Uploaded By:</strong> {selectedBill.uploadedBy || "N/A"}</p>
+              <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Bill ID:</strong> {selectedBill.id}</p>
+              <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Status:</strong> {selectedBill.status}</p>
+              <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Vendor:</strong> {selectedBill.vendor}</p>
+              <p className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Uploaded By:</strong> {selectedBill.uploadedBy || "N/A"}</p>
             </div>
           </div>
         </>

@@ -105,9 +105,7 @@ export default function App() {
     }
   });
 
-  useEffect(() => {
-    document.documentElement.classList.add("dark");
-  }, []);
+  // Theme is managed by ThemeContext in main.jsx
 
   useEffect(() => {
     if (employeeSession) {

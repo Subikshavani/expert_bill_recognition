@@ -29,15 +29,15 @@ export default function EmployeeLoginPage({ onLogin }) {
   };
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(6,182,212,0.2),transparent_35%),radial-gradient(circle_at_85%_10%,rgba(59,130,246,0.2),transparent_30%),linear-gradient(160deg,#020617_0%,#0f172a_50%,#111827_100%)]" />
-      <div className="panel relative z-10 w-full max-w-md rounded-3xl p-8 shadow-[0_20px_80px_rgba(2,6,23,0.75)]">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(6,182,212,0.07),transparent_35%),radial-gradient(circle_at_85%_10%,rgba(59,130,246,0.07),transparent_30%),linear-gradient(160deg,#f0f9ff_0%,#f8fafc_50%,#ffffff_100%)]" />
+      <div className="panel relative z-10 w-full max-w-md rounded-3xl p-8 shadow-2xl">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-500 text-slate-900">
             <LockKeyhole className="h-6 w-6" />
           </div>
-          <p className="text-xs uppercase tracking-[0.24em] text-cyan-300">Expense Management</p>
-          <h1 className="page-title mt-2 text-2xl font-bold text-slate-100">Employee Login</h1>
+          <p className="text-xs uppercase tracking-[0.24em] text-cyan-500">Expense Management</p>
+          <h1 className="page-title mt-2 text-2xl font-bold text-slate-800">Employee Login</h1>
           <p className="mt-2 text-sm text-slate-400">Access your bills, status, and profile</p>
         </div>
 
@@ -50,7 +50,7 @@ export default function EmployeeLoginPage({ onLogin }) {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-slate-950/50 py-2.5 pl-9 pr-3 text-sm text-slate-100 outline-none focus:border-cyan-400/70"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-cyan-400/70"
                 required
               />
             </div>
@@ -62,7 +62,7 @@ export default function EmployeeLoginPage({ onLogin }) {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-xl border border-white/10 bg-slate-950/50 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-400/70"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-cyan-400/70"
               required
             />
           </label>

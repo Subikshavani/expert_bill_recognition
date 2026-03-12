@@ -48,7 +48,7 @@ export default function EmployeesListPage() {
     {
       key: "name",
       header: "Employee Name",
-      render: (row) => <p className="font-semibold text-slate-100">{row.name}</p>,
+      render: (row) => <p className="font-semibold text-slate-800">{row.name}</p>,
     },
     { key: "email", header: "Email" },
     { key: "role", header: "Role" },
@@ -92,7 +92,7 @@ export default function EmployeesListPage() {
       <div className="panel rounded-2xl p-5 shadow-panel">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h2 className="page-title text-xl font-bold text-slate-100">Employees List</h2>
+            <h2 className="page-title text-xl font-bold text-slate-800">Employees List</h2>
             <p className="text-sm text-slate-400">Manage and review employee access.</p>
           </div>
           <div className="w-full max-w-sm">

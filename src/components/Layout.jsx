@@ -21,7 +21,7 @@ export default function Layout({ children, role, navConfig, onLogout }) {
       />
       <main className="ml-0 transition-all md:ml-72">
         <Navbar role={role} onMenuClick={() => setSidebarOpen(true)} onLogout={onLogout} />
-        <div className="space-y-6">{children}</div>
+        <div className="space-y-6 pb-8">{children}</div>
       </main>
     </div>
   );

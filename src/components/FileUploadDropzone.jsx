@@ -14,7 +14,7 @@ export default function FileUploadDropzone({ files, setFiles, label = "Upload Bi
 
   return (
     <div className="space-y-3">
-      <label className="text-sm font-semibold text-slate-700 dark:text-slate-200">{label}</label>
+      <label className="text-sm font-semibold text-slate-700 dark:text-slate-700">{label}</label>
       <div
         className="panel rounded-2xl border-2 border-dashed border-slate-300 p-6 text-center dark:border-slate-600"
         onDragOver={(event) => event.preventDefault()}
@@ -44,7 +44,7 @@ export default function FileUploadDropzone({ files, setFiles, label = "Upload Bi
         />
       </div>
       {!!files.length && (
-        <ul className="panel rounded-xl p-3 text-sm text-slate-600 dark:text-slate-300">
+        <ul className="panel rounded-xl p-3 text-sm text-slate-600 dark:text-slate-600">
           {files.map((file) => (
             <li key={`${file.name}-${file.size}`} className="py-1">
               {file.name}

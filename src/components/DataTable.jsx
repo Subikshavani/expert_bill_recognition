@@ -10,11 +10,11 @@ export default function DataTable({ columns, rows, pageSize = 8, emptyText = "No
   }, [page, pageSize, rows]);
 
   return (
-    <div className="rounded-2xl border border-white/10 bg-slate-950/40 p-3">
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 p-3">
       <div className="overflow-auto">
         <table className="min-w-full text-left text-sm">
           <thead>
-            <tr className="border-b border-white/10 text-[11px] uppercase tracking-wider text-slate-400">
+            <tr className="border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-400">
               {columns.map((col) => (
                 <th key={col.key} className="px-3 py-3 font-semibold">
                   {col.header}
@@ -27,7 +27,7 @@ export default function DataTable({ columns, rows, pageSize = 8, emptyText = "No
               paginatedRows.map((row, idx) => (
                 <tr
                   key={row.id || idx}
-                  className="border-b border-white/5 text-slate-200 transition hover:bg-white/[0.03]"
+                  className="border-b border-slate-100 text-slate-700 transition hover:bg-slate-50"
                 >
                   {columns.map((col) => (
                     <td key={col.key} className="px-3 py-3 align-top">
@@ -56,7 +56,7 @@ export default function DataTable({ columns, rows, pageSize = 8, emptyText = "No
             type="button"
             disabled={page === 1}
             onClick={() => setPage((prev) => Math.max(1, prev - 1))}
-            className="rounded-lg border border-white/10 px-3 py-1.5 disabled:opacity-40"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 disabled:opacity-40"
           >
             Prev
           </button>
@@ -67,7 +67,7 @@ export default function DataTable({ columns, rows, pageSize = 8, emptyText = "No
             type="button"
             disabled={page === totalPages}
             onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
-            className="rounded-lg border border-white/10 px-3 py-1.5 disabled:opacity-40"
+            className="rounded-lg border border-slate-200 px-3 py-1.5 disabled:opacity-40"
           >
             Next
           </button>

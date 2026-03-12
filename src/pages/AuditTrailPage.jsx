@@ -47,7 +47,7 @@ export default function AuditTrailPage() {
   return (
     <section className="space-y-5">
       <div className="panel rounded-2xl p-5 shadow-panel">
-        <h2 className="page-title text-2xl font-bold text-slate-100">Audit Trail</h2>
+        <h2 className="page-title text-2xl font-bold text-slate-800">Audit Trail</h2>
         <p className="mt-1 text-sm text-slate-400">Immutable system logs for governance and compliance.</p>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">
@@ -55,12 +55,12 @@ export default function AuditTrailPage() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Search bill, user, action, remarks"
-            className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100"
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
           />
           <select
             value={actionFilter}
             onChange={(event) => setActionFilter(event.target.value)}
-            className="rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100"
+            className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
           >
             {actions.map((action) => (
               <option key={action} value={action} className="text-slate-900">

@@ -28,7 +28,7 @@ export default function EmployeeMyBillsPage({ user }) {
     {
       key: "status",
       header: "Status",
-      render: (row) => <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-2 py-1 text-xs text-cyan-200">{row.status}</span>,
+      render: (row) => <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-2 py-1 text-xs text-cyan-600">{row.status}</span>,
     },
     {
       key: "actions",
@@ -37,7 +37,7 @@ export default function EmployeeMyBillsPage({ user }) {
         <button
           type="button"
           onClick={() => setSelectedBill(row)}
-          className="rounded-lg border border-white/20 px-3 py-1 text-xs text-slate-100 hover:bg-white/5"
+          className="rounded-lg border border-slate-300 px-3 py-1 text-xs text-slate-800 hover:bg-slate-100"
         >
           View
         </button>
@@ -51,13 +51,13 @@ export default function EmployeeMyBillsPage({ user }) {
   return (
     <section className="space-y-5">
       <div className="panel rounded-2xl p-5 shadow-panel">
-        <h2 className="page-title text-2xl font-bold text-slate-100">My Bills</h2>
+        <h2 className="page-title text-2xl font-bold text-slate-800">My Bills</h2>
         <p className="mt-1 text-sm text-slate-400">All bills submitted by your account.</p>
         <input
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="Search by bill number, vendor, department"
-          className="mt-4 w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100"
+          className="mt-4 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800"
         />
       </div>
 
@@ -70,13 +70,13 @@ export default function EmployeeMyBillsPage({ user }) {
       >
         {selectedBill ? (
           <div className="grid gap-3 md:grid-cols-2">
-            <p className="rounded-lg border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Bill Number:</strong> {selectedBill.billNumber}</p>
-            <p className="rounded-lg border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Vendor:</strong> {selectedBill.vendor}</p>
-            <p className="rounded-lg border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Department:</strong> {selectedBill.department}</p>
-            <p className="rounded-lg border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Status:</strong> {selectedBill.status}</p>
-            <p className="rounded-lg border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Amount:</strong> ${Number(selectedBill.amount).toLocaleString()}</p>
-            <p className="rounded-lg border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200"><strong>Date:</strong> {selectedBill.date}</p>
-            <p className="rounded-lg border border-white/10 bg-slate-950/40 p-3 text-sm text-slate-200 md:col-span-2"><strong>Notes:</strong> {selectedBill.notes || "-"}</p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Bill Number:</strong> {selectedBill.billNumber}</p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Vendor:</strong> {selectedBill.vendor}</p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Department:</strong> {selectedBill.department}</p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Status:</strong> {selectedBill.status}</p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Amount:</strong> ${Number(selectedBill.amount).toLocaleString()}</p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Date:</strong> {selectedBill.date}</p>
+            <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700 md:col-span-2"><strong>Notes:</strong> {selectedBill.notes || "-"}</p>
           </div>
         ) : null}
       </Modal>

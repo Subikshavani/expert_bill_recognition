@@ -37,7 +37,7 @@ export default function AddEmployeePage() {
   return (
     <section className="space-y-6">
       <div className="panel rounded-2xl p-6 shadow-panel">
-        <h2 className="page-title text-xl font-bold text-slate-100">Add Employee</h2>
+        <h2 className="page-title text-xl font-bold text-slate-800">Add Employee</h2>
         <p className="mt-1 text-sm text-slate-400">Create employee accounts before enabling bill workflows.</p>
 
         <form className="mt-6 grid gap-4 md:grid-cols-2" onSubmit={handleSubmit}>
@@ -69,7 +69,7 @@ export default function AddEmployeePage() {
             <select
               value={form.role}
               onChange={(event) => setForm((prev) => ({ ...prev, role: event.target.value }))}
-              className="w-full rounded-xl border border-white/10 bg-slate-950/40 px-3 py-2.5 text-sm text-slate-100 outline-none focus:border-cyan-400/70"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-cyan-400/70"
             >
               {roleOptions.map((role) => (
                 <option key={role} value={role} className="text-slate-900">

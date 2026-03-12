@@ -1019,13 +1019,36 @@ app.use((error, _req, res, next) => {
   return next(error);
 });
 
-const PORT = process.env.PORT || 3001;
+const PORT = Number(process.env.PORT) || 3001;
+
+function startServer(initialPort, maxPortRetries = 3) {
+  let remainingRetries = maxPortRetries;
+
+  const listenOnPort = (port) => {
+    const server = app.listen(port, () => {
+      console.log(`Expense-API running -> http://localhost:${port}`);
+    });
+
+    server.on("error", (error) => {
+      if (error?.code === "EADDRINUSE" && remainingRetries > 0) {
+        remainingRetries -= 1;
+        const nextPort = port + 1;
+        console.warn(`Port ${port} is in use. Retrying on port ${nextPort}...`);
+        listenOnPort(nextPort);
+        return;
+      }
+
+      console.error("Server failed to start:", error);
+      process.exit(1);
+    });
+  };
+
+  listenOnPort(initialPort);
+}
 
 initDatabase()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`Expense-API running -> http://localhost:${PORT}`);
-    });
+    startServer(PORT);
   })
   .catch((error) => {
     console.error("Database initialization failed:", error);
