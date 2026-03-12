@@ -88,9 +88,31 @@ const monthlyExpenseSchema = new mongoose.Schema({
   amount: { type: Number, required: true, default: 0 },
 });
 
+const billOCRResultSchema = new mongoose.Schema(
+  {
+    billId: { type: String, required: true, unique: true },
+    vendor: { type: String, default: "" },
+    billNumber: { type: String, default: "" },
+    date: { type: String, default: "" },
+    amount: { type: Number, default: null },
+    tax: { type: Number, default: null },
+    category: { type: String, default: "" },
+    rawText: { type: String, default: "" },
+    confidence: { type: Number, default: 0 },
+    status: { type: String, default: "pending" }, // pending, success, failed
+    errorMessage: { type: String, default: "" },
+    processedAt: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+    collection: "bill_ocr_results",
+  }
+);
+
 const User = mongoose.model("User", userSchema);
 const Bill = mongoose.model("Bill", billSchema);
 const AuditEvent = mongoose.model("AuditEvent", auditSchema);
 const MonthlyExpense = mongoose.model("MonthlyExpense", monthlyExpenseSchema);
+const BillOCRResult = mongoose.model("BillOCRResult", billOCRResultSchema);
 
-module.exports = { User, Bill, AuditEvent, MonthlyExpense, initDatabase };
+module.exports = { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, initDatabase };

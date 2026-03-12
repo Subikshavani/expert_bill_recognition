@@ -4,7 +4,7 @@ const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const Tesseract = require("tesseract.js");
 const pdfParse = require("pdf-parse");
-const { User, Bill, AuditEvent, MonthlyExpense, initDatabase } = require("./db");
+const { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, initDatabase } = require("./db");
 
 const app = express();
 
@@ -570,6 +570,371 @@ app.get("/api/audit", async (_req, res) => {
     res.json(rows.map((r) => ({ id: r.id, billId: r.bill_id, action: r.action, user: r.user, timestamp: r.timestamp, comments: r.comments })));
   } catch (error) {
     res.status(500).json({ error: "Failed to load audit events." });
+  }
+});
+
+/**
+ * OCR Processing Endpoint
+ * POST /api/process-ocr
+ * 
+ * Accepts file uploads for bills and processes them with OCR.
+ * Can process single or multiple files.
+ * 
+ * Request:
+ * - Content-Type: multipart/form-data
+ * - Files: Upload files with field name matching: 'file_<billId>'
+ * - Or use field 'files' and provide 'billIds' as JSON
+ * 
+ * Response:
+ * { message, processed, success, failed, results: [] }
+ */
+app.post("/api/process-ocr", upload.any(), async (req, res) => {
+  const processLog = {
+    startTime: new Date(),
+    processed: 0,
+    success: 0,
+    failed: 0,
+    results: [],
+    errors: [],
+  };
+
+  try {
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ 
+        error: "No files uploaded.",
+        message: "Please upload bill files for OCR processing.",
+        hint: "Use multipart/form-data with field names like 'file_<billId>' or use 'files' field"
+      });
+    }
+
+    console.log(`📋 OCR Processing: ${req.files.length} file(s) received`);
+
+    // Process each uploaded file
+    for (const file of req.files) {
+      processLog.processed++;
+
+      // Extract billId from field name (e.g., 'file_BILL-2405' or from req.body.billIds)
+      let billId = "";
+      
+      // Method 1: Extract from field name (e.g., file_BILL-2405)
+      if (file.fieldname.startsWith("file_")) {
+        billId = file.fieldname.substring(5);
+      }
+      // Method 2: Use billId from body if provided
+      else if (req.body.billId) {
+        billId = req.body.billId;
+      }
+      // Method 3: Use filename without extension as fallback
+      else {
+        billId = file.originalname.split(".")[0];
+      }
+
+      try {
+        // Check if this bill already has OCR results
+        const existingResult = await BillOCRResult.findOne({ billId });
+        
+        if (existingResult) {
+          console.log(`⏭️  Skipping ${billId}: OCR already processed`);
+          processLog.results.push({
+            billId,
+            status: "skipped",
+            reason: "Already processed",
+            processedAt: new Date(),
+          });
+          continue;
+        }
+
+        // Check if bill exists in bills collection
+        const billRecord = await Bill.findOne({ id: billId }).lean();
+        if (!billRecord) {
+          console.warn(`⚠️  Bill ${billId} not found in bills collection`);
+          processLog.results.push({
+            billId,
+            status: "failed",
+            reason: "Bill not found in database",
+            processedAt: new Date(),
+          });
+          processLog.failed++;
+          continue;
+        }
+
+        // Extract text from file using OCR
+        let rawText = "";
+        let ocrConfidence = 0;
+
+        try {
+          if (file.mimetype === "application/pdf") {
+            const pdfResult = await pdfParse(file.buffer);
+            rawText = (pdfResult?.text || "").trim();
+            ocrConfidence = 0.95; // PDFs are generally more reliable
+          } else if (["image/jpeg", "image/png", "image/jpg"].includes(file.mimetype)) {
+            const ocrResult = await Tesseract.recognize(file.buffer, "eng", {
+              logger: (m) => {
+                // Optional: Log progress
+                if (m.status === "recognizing text") {
+                  ocrConfidence = Math.max(ocrConfidence, m.progress || 0);
+                }
+              },
+            });
+            rawText = (ocrResult?.data?.text || "").trim();
+            ocrConfidence = ocrResult?.data?.confidence || 0;
+          } else {
+            throw new Error(`Unsupported file type: ${file.mimetype}`);
+          }
+        } catch (ocrError) {
+          throw new Error(`OCR processing failed: ${ocrError.message}`);
+        }
+
+        if (!rawText) {
+          console.warn(`⚠️  No text extracted from ${billId}`);
+          // Store empty result
+          await BillOCRResult.create({
+            billId,
+            rawText: "",
+            status: "failed",
+            errorMessage: "No text extracted from image",
+            confidence: 0,
+            processedAt: new Date(),
+          });
+          processLog.results.push({
+            billId,
+            status: "failed",
+            reason: "No text extracted from image",
+            processedAt: new Date(),
+          });
+          processLog.failed++;
+          continue;
+        }
+
+        // Parse extracted text to extract structured data
+        const parsed = parseBillText(rawText);
+
+        // Create OCR result document
+        const ocrResult = {
+          billId,
+          vendor: parsed.vendor || billRecord.vendor || "",
+          billNumber: parsed.billNumber || billRecord.bill_number || "",
+          date: parsed.date || billRecord.date || "",
+          amount: parsed.amount !== null ? parsed.amount : billRecord.amount || null,
+          tax: parsed.taxAmount || null,
+          category: parsed.category || billRecord.category || "",
+          rawText,
+          confidence: ocrConfidence,
+          status: "success",
+          errorMessage: "",
+          processedAt: new Date(),
+        };
+
+        // Store result in MongoDB
+        await BillOCRResult.create(ocrResult);
+
+        console.log(`✅ Successfully processed ${billId}`);
+        processLog.results.push({
+          billId,
+          status: "success",
+          data: {
+            vendor: ocrResult.vendor,
+            billNumber: ocrResult.billNumber,
+            date: ocrResult.date,
+            amount: ocrResult.amount,
+            tax: ocrResult.tax,
+          },
+          confidence: ocrConfidence,
+          processedAt: new Date(),
+        });
+        processLog.success++;
+
+      } catch (fileProcessError) {
+        console.error(`❌ Error processing ${billId}:`, fileProcessError.message);
+        
+        // Store failed result
+        try {
+          await BillOCRResult.updateOne(
+            { billId },
+            {
+              $set: {
+                status: "failed",
+                errorMessage: fileProcessError.message,
+                processedAt: new Date(),
+              },
+            },
+            { upsert: true }
+          );
+        } catch (storeError) {
+          console.error(`Error storing failed result for ${billId}:`, storeError.message);
+        }
+
+        processLog.failed++;
+        processLog.results.push({
+          billId,
+          status: "failed",
+          reason: fileProcessError.message,
+          processedAt: new Date(),
+        });
+        processLog.errors.push({
+          billId,
+          error: fileProcessError.message,
+        });
+      }
+    }
+
+    console.log(`\n📊 OCR Processing Summary:`);
+    console.log(`   Total Processed: ${processLog.processed}`);
+    console.log(`   ✅ Success: ${processLog.success}`);
+    console.log(`   ❌ Failed: ${processLog.failed}`);
+    console.log(`   ⏭️  Skipped: ${processLog.processed - processLog.success - processLog.failed}`);
+
+    res.json({
+      message: "OCR processing completed",
+      processed: processLog.processed,
+      success: processLog.success,
+      failed: processLog.failed,
+      skipped: processLog.processed - processLog.success - processLog.failed,
+      results: processLog.results,
+      timestamp: new Date(),
+    });
+
+  } catch (error) {
+    console.error("❌ OCR Processing Error:", error.message);
+    res.status(500).json({
+      error: "OCR processing failed",
+      message: error.message,
+      processed: processLog.processed,
+      success: processLog.success,
+      failed: processLog.failed,
+    });
+  }
+});
+
+/**
+ * Get OCR Results
+ * GET /api/ocr-results
+ * 
+ * Retrieve OCR results for all or specific bills.
+ * 
+ * Query Parameters:
+ * - billId (optional): Get result for specific bill
+ * - status (optional): Filter by status (success, failed, pending)
+ * - limit (optional): Limit results (default: 50)
+ */
+app.get("/api/ocr-results", async (req, res) => {
+  try {
+    const { billId, status, limit = 50 } = req.query;
+    const query = {};
+
+    if (billId) {
+      query.billId = billId;
+    }
+    if (status) {
+      query.status = status;
+    }
+
+    const results = await BillOCRResult.find(query)
+      .sort({ processedAt: -1 })
+      .limit(parseInt(limit) || 50)
+      .lean();
+
+    const stats = await BillOCRResult.aggregate([
+      {
+        $group: {
+          _id: "$status",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    res.json({
+      results,
+      stats: stats.reduce((acc, stat) => ({ ...acc, [stat._id]: stat.count }), {}),
+      total: results.length,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to retrieve OCR results." });
+  }
+});
+
+/**
+ * Reprocess OCR for Specific Bill
+ * POST /api/ocr-results/:billId/reprocess
+ * 
+ * Reprocess OCR for a specific bill if file is provided.
+ */
+app.post("/api/ocr-results/:billId/reprocess", upload.single("file"), async (req, res) => {
+  try {
+    const { billId } = req.params;
+
+    if (!req.file) {
+      return res.status(400).json({ error: "File is required for reprocessing." });
+    }
+
+    // Check if bill exists
+    const bill = await Bill.findOne({ id: billId }).lean();
+    if (!bill) {
+      return res.status(404).json({ error: "Bill not found." });
+    }
+
+    // Process file
+    let rawText = "";
+    let ocrConfidence = 0;
+
+    try {
+      if (req.file.mimetype === "application/pdf") {
+        const pdfResult = await pdfParse(req.file.buffer);
+        rawText = (pdfResult?.text || "").trim();
+        ocrConfidence = 0.95;
+      } else {
+        const ocrResult = await Tesseract.recognize(req.file.buffer, "eng", {
+          logger: () => {},
+        });
+        rawText = (ocrResult?.data?.text || "").trim();
+        ocrConfidence = ocrResult?.data?.confidence || 0;
+      }
+    } catch (ocrError) {
+      return res.status(500).json({ error: `OCR failed: ${ocrError.message}` });
+    }
+
+    if (!rawText) {
+      return res.status(400).json({ error: "No text could be extracted from the image." });
+    }
+
+    // Parse extracted text
+    const parsed = parseBillText(rawText);
+
+    // Update or create result
+    const ocrResult = await BillOCRResult.findOneAndUpdate(
+      { billId },
+      {
+        vendor: parsed.vendor || bill.vendor || "",
+        billNumber: parsed.billNumber || bill.bill_number || "",
+        date: parsed.date || bill.date || "",
+        amount: parsed.amount !== null ? parsed.amount : bill.amount || null,
+        tax: parsed.taxAmount || null,
+        category: parsed.category || bill.category || "",
+        rawText,
+        confidence: ocrConfidence,
+        status: "success",
+        errorMessage: "",
+        processedAt: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
+    res.json({
+      message: "OCR reprocessed successfully",
+      billId,
+      data: {
+        vendor: ocrResult.vendor,
+        billNumber: ocrResult.billNumber,
+        date: ocrResult.date,
+        amount: ocrResult.amount,
+        tax: ocrResult.tax,
+        category: ocrResult.category,
+        confidence: ocrConfidence,
+      },
+      processedAt: ocrResult.processedAt,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to reprocess OCR.", message: error.message });
   }
 });
 
