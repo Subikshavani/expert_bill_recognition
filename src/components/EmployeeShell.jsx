@@ -8,11 +8,9 @@ const employeeNavItems = [
   { path: "/employee/upload-bill", label: "Upload Bill", icon: "upload" },
   { path: "/employee/my-bills", label: "My Bills", icon: "myBills" },
   { path: "/employee/bill-status", label: "Bill Status Tracking", icon: "billStatus" },
-  { path: "/employee/templates", label: "Bill Templates", icon: "template" },
   { path: "/employee/budgets", label: "Budget Management", icon: "budget" },
   { path: "/employee/vendors", label: "Vendor Management", icon: "vendor" },
   { path: "/employee/advances", label: "Advance Requests", icon: "advance" },
-  { path: "/employee/analytics", label: "Trip Analytics", icon: "chart" },
   { path: "/employee/logout", label: "Logout", icon: "logout", action: "logout" },
 ];
 

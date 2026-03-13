@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { CheckCircle, AlertCircle, Plus } from "lucide-react";
 import Button from "../components/Button";
 import FormInput from "../components/FormInput";
@@ -69,11 +69,11 @@ export default function VendorManagementPage({ user }) {
   const getStatusIcon = (status) => {
     switch (status) {
       case "approved":
-        return <CheckCircle size={16} className="text-emerald-400" />;
+        return <CheckCircle size={16} className="text-blue-400" />;
       case "blacklisted":
-        return <AlertCircle size={16} className="text-rose-400" />;
+        return <AlertCircle size={16} className="text-blue-400" />;
       case "pending":
-        return <AlertCircle size={16} className="text-yellow-400" />;
+        return <AlertCircle size={16} className="text-blue-400" />;
       default:
         return null;
     }
@@ -82,11 +82,11 @@ export default function VendorManagementPage({ user }) {
   const getStatusColor = (status) => {
     switch (status) {
       case "approved":
-        return "bg-emerald-100/20 border-emerald-200/30 dark:bg-emerald-900/20 dark:border-emerald-800/30";
+        return "bg-blue-100/20 border-blue-200/30 dark:bg-blue-900/20 dark:border-blue-800/30";
       case "blacklisted":
-        return "bg-rose-100/20 border-rose-200/30 dark:bg-rose-900/20 dark:border-rose-800/30";
+        return "bg-blue-100/20 border-blue-200/30 dark:bg-blue-900/20 dark:border-blue-800/30";
       case "pending":
-        return "bg-yellow-100/20 border-yellow-200/30 dark:bg-yellow-900/20 dark:border-yellow-800/30";
+        return "bg-blue-100/20 border-blue-200/30 dark:bg-blue-900/20 dark:border-blue-800/30";
       default:
         return "bg-slate-100/20 border-slate-200/30";
     }
@@ -107,11 +107,11 @@ export default function VendorManagementPage({ user }) {
           <h2 className="page-title text-2xl font-bold">Vendor Management</h2>
           <p className="mt-2 text-sm text-slate-400">Manage vendors and track spending analytics</p>
         </div>
-        <div className="panel rounded-2xl border border-rose-200/30 bg-rose-500/5 p-8 shadow-panel dark:border-rose-800/30 dark:bg-rose-900/10">
-          <p className="text-sm text-rose-600 dark:text-rose-400 mb-4">{error}</p>
+        <div className="panel rounded-2xl border border-blue-200/30 bg-blue-500/5 p-8 shadow-panel dark:border-blue-800/30 dark:bg-blue-900/10">
+          <p className="text-sm text-blue-600 dark:text-blue-400 mb-4">{error}</p>
           <button
             onClick={() => fetchVendors()}
-            className="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 font-medium transition-colors text-sm"
+            className="px-4 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 font-medium transition-colors text-sm"
           >
             Retry
           </button>
@@ -135,7 +135,7 @@ export default function VendorManagementPage({ user }) {
               onClick={() => setFilterStatus(status)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 filterStatus === status
-                  ? "bg-cyan-500 text-white"
+                  ? "bg-blue-500 text-white"
                   : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
             >
@@ -188,7 +188,7 @@ export default function VendorManagementPage({ user }) {
                 </select>
               </label>
             </div>
-            {error && <p className="text-sm text-rose-400">{error}</p>}
+            {error && <p className="text-sm text-blue-400">{error}</p>}
             <div className="flex gap-2">
               <Button type="submit">Add Vendor</Button>
               <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
@@ -199,7 +199,7 @@ export default function VendorManagementPage({ user }) {
         </div>
       )}
 
-      {success && <p className="text-sm text-emerald-400">{success}</p>}
+      {success && <p className="text-sm text-blue-400">{success}</p>}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {vendors.map((vendor) => (
@@ -222,7 +222,7 @@ export default function VendorManagementPage({ user }) {
 
             <div className="mt-3 pt-3 border-t border-slate-200 dark:border-slate-700">
               <p className="text-xs text-slate-400">
-                Total Spent: <span className="font-semibold text-slate-600 dark:text-slate-300">₹{vendor.totalSpent.toLocaleString()}</span>
+                Total Spent: <span className="font-semibold text-slate-600 dark:text-slate-300">â‚¹{vendor.totalSpent.toLocaleString()}</span>
               </p>
               <p className="text-xs text-slate-400 mt-1">
                 Bills: <span className="font-semibold">{vendor.billCount}</span>
@@ -232,7 +232,7 @@ export default function VendorManagementPage({ user }) {
             {vendor.status !== "approved" && (
               <button
                 onClick={() => handleStatusChange(vendor.vendorId, "approved")}
-                className="mt-3 w-full text-xs bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 py-1.5 rounded-lg transition-colors"
+                className="mt-3 w-full text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-1.5 rounded-lg transition-colors"
               >
                 Approve
               </button>
@@ -241,7 +241,7 @@ export default function VendorManagementPage({ user }) {
             {vendor.status !== "blacklisted" && (
               <button
                 onClick={() => handleStatusChange(vendor.vendorId, "blacklisted")}
-                className="mt-2 w-full text-xs bg-rose-500/20 hover:bg-rose-500/30 text-rose-400 py-1.5 rounded-lg transition-colors"
+                className="mt-2 w-full text-xs bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 py-1.5 rounded-lg transition-colors"
               >
                 Blacklist
               </button>
@@ -258,3 +258,4 @@ export default function VendorManagementPage({ user }) {
     </section>
   );
 }
+

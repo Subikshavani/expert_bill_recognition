@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
 import FormInput from "../components/FormInput";
 import LoadingSpinner from "../components/LoadingSpinner";
@@ -42,7 +42,7 @@ export default function EmployeesListPage() {
   };
 
   if (loading) return <LoadingSpinner message="Loading employees..." />;
-  if (error) return <p className="p-4 text-rose-400">Error: {error}</p>;
+  if (error) return <p className="p-4 text-blue-400">Error: {error}</p>;
 
   const columns = [
     {
@@ -59,7 +59,7 @@ export default function EmployeesListPage() {
       render: (row) => (
         <span
           className={`rounded-full px-2 py-1 text-xs font-semibold ${
-            row.status === "Active" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"
+            row.status === "Active" ? "bg-blue-500/20 text-blue-300" : "bg-blue-500/20 text-blue-300"
           }`}
         >
           {row.status}
@@ -77,7 +77,7 @@ export default function EmployeesListPage() {
           <Button
             type="button"
             variant="secondary"
-            className="border-rose-300/30 px-3 py-1.5 text-xs text-rose-200 hover:bg-rose-500/10"
+            className="border-blue-300/30 px-3 py-1.5 text-xs text-blue-200 hover:bg-blue-500/10"
             onClick={() => deleteLocal(row.id)}
           >
             Delete
@@ -148,3 +148,4 @@ export default function EmployeesListPage() {
     </section>
   );
 }
+

@@ -17,6 +17,28 @@ async function initDatabase() {
   }
 }
 
+const submittedBillSchema = new mongoose.Schema(
+  {
+    id: { type: String, required: true },
+    bill_number: { type: String, required: true },
+    vendor: { type: String, required: true },
+    category: { type: String, required: true },
+    amount: { type: Number, required: true },
+    date: { type: String, required: true },
+    department: { type: String, required: true },
+    status: { type: String, required: true },
+    uploaded_by: { type: String, required: true },
+    uploaded_by_email: { type: String, default: "" },
+    sessionId: { type: String, default: "" },
+    notes: { type: String, default: "" },
+    stage: { type: Number, required: true },
+    files: { type: [String], default: [] },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+  },
+  { _id: false }
+);
+
 // User Schema with bcrypt
 const userSchema = new mongoose.Schema(
   {
@@ -28,6 +50,7 @@ const userSchema = new mongoose.Schema(
     phone: { type: String, default: "" },
     password: { type: String, required: true },
     status: { type: String, required: true, default: "Active" },
+    submittedBills: { type: [submittedBillSchema], default: [] },
   },
   { timestamps: true }
 );
@@ -61,6 +84,7 @@ const billSchema = new mongoose.Schema(
     status: { type: String, required: true },
     uploaded_by: { type: String, required: true },
     uploaded_by_email: { type: String, default: "" },
+    sessionId: { type: String, default: "" },
     notes: { type: String, default: "" },
     stage: { type: Number, required: true },
     files: { type: [String], default: [] },
@@ -120,20 +144,6 @@ const tripSessionSchema = new mongoose.Schema(
     sessionStatus: { type: String, enum: ["Active", "Completed"], default: "Active" },
   },
   { timestamps: true, collection: "tripSessions" }
-);
-
-// Bill Template Schema
-const billTemplateSchema = new mongoose.Schema(
-  {
-    templateId: { type: String, required: true, unique: true },
-    employeeEmail: { type: String, required: true },
-    templateName: { type: String, required: true },
-    vendor: { type: String, required: true },
-    category: { type: String, required: true },
-    description: { type: String, default: "" },
-    isActive: { type: Boolean, default: true },
-  },
-  { timestamps: true, collection: "billTemplates" }
 );
 
 // Budget Limit Schema
@@ -223,40 +233,16 @@ const enhancedAuditLogSchema = new mongoose.Schema(
   { timestamps: true, collection: "enhancedAuditLogs" }
 );
 
-// Trip Analytics Schema (computed/cached)
-const tripAnalyticsSchema = new mongoose.Schema(
-  {
-    analyticsId: { type: String, required: true, unique: true },
-    sessionId: { type: String, required: true },
-    employeeEmail: { type: String, required: true },
-    tripName: { type: String, required: true },
-    startDate: { type: String, required: true },
-    endDate: { type: String, default: "" },
-    totalBills: { type: Number, default: 0 },
-    totalAmount: { type: Number, default: 0 },
-    approvedAmount: { type: Number, default: 0 },
-    pendingAmount: { type: Number, default: 0 },
-    rejectedAmount: { type: Number, default: 0 },
-    categoryBreakdown: { type: Object, default: {} }, // { Fuel: 5000, Hotel: 3000 }
-    advanceRequested: { type: Number, default: 0 },
-    advanceApproved: { type: Number, default: 0 },
-    advanceSettled: { type: Number, default: 0 },
-  },
-  { timestamps: true, collection: "tripAnalytics" }
-);
-
 const User = mongoose.model("User", userSchema);
 const Bill = mongoose.model("Bill", billSchema);
 const AuditEvent = mongoose.model("AuditEvent", auditSchema);
 const MonthlyExpense = mongoose.model("MonthlyExpense", monthlyExpenseSchema);
 const BillOCRResult = mongoose.model("BillOCRResult", billOCRResultSchema);
 const TripSession = mongoose.model("TripSession", tripSessionSchema);
-const BillTemplate = mongoose.model("BillTemplate", billTemplateSchema);
 const BudgetLimit = mongoose.model("BudgetLimit", budgetLimitSchema);
 const Vendor = mongoose.model("Vendor", vendorSchema);
 const BillComment = mongoose.model("BillComment", billCommentSchema);
 const AdvanceRequest = mongoose.model("AdvanceRequest", advanceRequestSchema);
 const EnhancedAuditLog = mongoose.model("EnhancedAuditLog", enhancedAuditLogSchema);
-const TripAnalytics = mongoose.model("TripAnalytics", tripAnalyticsSchema);
 
-module.exports = { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, BillTemplate, BudgetLimit, Vendor, BillComment, AdvanceRequest, EnhancedAuditLog, TripAnalytics, initDatabase };
+module.exports = { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, BudgetLimit, Vendor, BillComment, AdvanceRequest, EnhancedAuditLog, initDatabase };

@@ -1,3 +1,4 @@
+﻿import { useEffect } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useApi } from "../hooks/useApi";
 
@@ -16,11 +17,32 @@ function normalizeStep(status) {
 
 export default function EmployeeBillStatusPage({ user }) {
   const email = encodeURIComponent(user?.email || "");
-  const { data, loading, error } = useApi(`/employee/bills/status?email=${email}`);
+  const { data, loading, error, refetch } = useApi(`/employee/bills/status?email=${email}`);
   const rows = data ?? [];
 
+  useEffect(() => {
+    const hasInProgressAnalysis = rows.some((row) => row.analysisStatus === "Analyzing");
+    if (!hasInProgressAnalysis) return;
+
+    const timer = setInterval(() => {
+      refetch();
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, [rows, refetch]);
+
+  const analysisBadgeClass = (analysisStatus) => {
+    if (analysisStatus === "Analyzed") {
+      return "border-blue-300/40 bg-blue-400/10 text-blue-600";
+    }
+    if (analysisStatus === "Analysis Failed") {
+      return "border-blue-300/40 bg-blue-400/10 text-blue-500";
+    }
+    return "border-amber-300/40 bg-amber-400/10 text-amber-600";
+  };
+
   if (loading) return <LoadingSpinner message="Loading bill status..." />;
-  if (error) return <p className="p-4 text-rose-300">Error: {error}</p>;
+  if (error) return <p className="p-4 text-blue-300">Error: {error}</p>;
 
   return (
     <section className="space-y-5">
@@ -37,18 +59,34 @@ export default function EmployeeBillStatusPage({ user }) {
             <div key={row.id} className="panel rounded-2xl p-4 shadow-panel">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="text-sm text-slate-600">{row.billNumber} • {row.vendor}</p>
-                  <p className="text-xs text-slate-500">{row.date} • ${Number(row.amount).toLocaleString()}</p>
+                  <p className="text-sm text-slate-600">{row.billNumber} â€¢ {row.vendor}</p>
+                  <p className="text-xs text-slate-500">{row.date} â€¢ ${Number(row.amount).toLocaleString()}</p>
                 </div>
-                <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs text-cyan-600">{row.status}</span>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="rounded-full border border-blue-300/30 bg-blue-400/10 px-3 py-1 text-xs text-blue-600">{row.status}</span>
+                  <span className={`rounded-full border px-3 py-1 text-xs ${analysisBadgeClass(row.analysisStatus)}`}>
+                    OCR: {row.analysisStatus}
+                  </span>
+                </div>
               </div>
+
+              <div className="mt-2 text-xs text-slate-500">
+                {row.analysisStatus === "Analyzing" ? "Bill is being scanned and analyzed." : null}
+                {row.analysisStatus === "Analyzed" && row.analysisConfidence != null
+                  ? `OCR confidence: ${(Number(row.analysisConfidence) * 100).toFixed(1)}%`
+                  : null}
+                {row.analysisStatus === "Analysis Failed"
+                  ? `OCR error: ${row.analysisError || "Unable to extract fields from the uploaded bill."}`
+                  : null}
+              </div>
+
               <div className="mt-3 flex flex-wrap gap-2">
                 {order.map((step) => (
                   <span
                     key={step}
                     className={`rounded-lg border px-2 py-1 text-[11px] ${
                       step === normalizeStep(row.status)
-                        ? "border-cyan-300/50 bg-cyan-400/15 text-cyan-600"
+                        ? "border-blue-300/50 bg-blue-400/15 text-blue-600"
                         : "border-slate-200 bg-slate-50 text-slate-500"
                     }`}
                   >
@@ -82,3 +120,4 @@ export default function EmployeeBillStatusPage({ user }) {
     </section>
   );
 }
+

@@ -1,4 +1,4 @@
-const defaultStages = [
+﻿const defaultStages = [
   "Uploaded",
   "Accounts Review",
   "Manager Approval",
@@ -24,7 +24,7 @@ export default function ProgressTracker({ stage = 1, stages = defaultStages, tim
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold ${
                     reached
-                      ? "bg-cyan-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.65)]"
+                      ? "bg-blue-400 text-slate-950 shadow-[0_0_18px_rgba(34,211,238,0.65)]"
                       : "bg-slate-700 text-slate-600"
                   }`}
                 >
@@ -43,9 +43,9 @@ export default function ProgressTracker({ stage = 1, stages = defaultStages, tim
           <ul className="space-y-2">
             {timeline.map((item, idx) => (
               <li key={`${item.billId}-${idx}`} className="rounded-xl border border-slate-200 bg-white p-3 text-xs text-slate-600">
-                <p className="font-semibold text-cyan-600">{item.action}</p>
+                <p className="font-semibold text-blue-600">{item.action}</p>
                 <p>
-                  {item.user} • {item.timestamp}
+                  {item.user} â€¢ {item.timestamp}
                 </p>
                 <p className="text-slate-400">{item.comments || "No remarks"}</p>
               </li>
@@ -58,3 +58,4 @@ export default function ProgressTracker({ stage = 1, stages = defaultStages, tim
     </div>
   );
 }
+

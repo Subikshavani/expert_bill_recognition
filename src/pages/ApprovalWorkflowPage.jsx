@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../api/client";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useApi } from "../hooks/useApi";
@@ -45,7 +45,7 @@ export default function ApprovalWorkflowPage({ role }) {
   };
 
   if (loading) return <LoadingSpinner message="Loading approval queue..." />;
-  if (error) return <p className="p-4 text-rose-400">Error: {error}</p>;
+  if (error) return <p className="p-4 text-blue-400">Error: {error}</p>;
 
   return (
     <section className="grid gap-6 xl:grid-cols-3">
@@ -61,7 +61,7 @@ export default function ApprovalWorkflowPage({ role }) {
               onClick={() => setSelectedBillId(bill.id)}
               className={`w-full rounded-xl border px-3 py-3 text-left text-sm transition ${
                 selectedBillId === bill.id
-                  ? "border-cyan-300/40 bg-cyan-400/10 text-cyan-700"
+                  ? "border-blue-300/40 bg-blue-400/10 text-blue-700"
                   : "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
               }`}
             >
@@ -82,7 +82,7 @@ export default function ApprovalWorkflowPage({ role }) {
                 <h3 className="page-title text-xl font-bold text-slate-800">Bill Review: {selectedBill.id}</h3>
                 <p className="text-sm text-slate-400">Current Stage: {selectedBill.status}</p>
               </div>
-              <span className="rounded-full border border-violet-300/30 bg-violet-400/10 px-3 py-1 text-xs text-violet-200">{selectedBill.category}</span>
+              <span className="rounded-full border border-blue-300/30 bg-blue-400/10 px-3 py-1 text-xs text-blue-200">{selectedBill.category}</span>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
@@ -93,7 +93,7 @@ export default function ApprovalWorkflowPage({ role }) {
                 <p><strong>Amount:</strong> ${Number(selectedBill.amount).toLocaleString()}</p>
                 <p><strong>Date:</strong> {selectedBill.date}</p>
               </div>
-              <div className="flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-cyan-400/30 bg-slate-50 text-sm text-cyan-600">
+              <div className="flex min-h-56 items-center justify-center rounded-2xl border border-dashed border-blue-400/30 bg-slate-50 text-sm text-blue-600">
                 Uploaded bill preview area
               </div>
             </div>
@@ -111,7 +111,7 @@ export default function ApprovalWorkflowPage({ role }) {
                 type="button"
                 disabled={acting}
                 onClick={() => takeAction("Approved")}
-                className="rounded-xl bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-60"
+                className="rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-60"
               >
                 Approve
               </button>
@@ -119,7 +119,7 @@ export default function ApprovalWorkflowPage({ role }) {
                 type="button"
                 disabled={acting}
                 onClick={() => takeAction("Rejected")}
-                className="rounded-xl bg-rose-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-60"
+                className="rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-60"
               >
                 Reject
               </button>
@@ -133,7 +133,7 @@ export default function ApprovalWorkflowPage({ role }) {
               </button>
             </div>
 
-            {actionMessage ? <p className="text-sm text-cyan-600">{actionMessage}</p> : null}
+            {actionMessage ? <p className="text-sm text-blue-600">{actionMessage}</p> : null}
           </div>
         ) : (
           <p className="text-slate-400">Select a bill from the queue to begin review.</p>
@@ -142,3 +142,4 @@ export default function ApprovalWorkflowPage({ role }) {
     </section>
   );
 }
+

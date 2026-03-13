@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import { roleOptions } from "../auth/permissions";
 import { apiFetch } from "../api/client";
 import DataTable from "../components/DataTable";
@@ -70,7 +70,7 @@ export default function UserManagementPage() {
   };
 
   if (loading) return <LoadingSpinner message="Loading employees..." />;
-  if (error) return <p className="p-4 text-rose-400">Error: {error}</p>;
+  if (error) return <p className="p-4 text-blue-400">Error: {error}</p>;
 
   const columns = [
     {
@@ -91,7 +91,7 @@ export default function UserManagementPage() {
       render: (row) => (
         <span
           className={`rounded-full px-2 py-1 text-xs font-semibold ${
-            row.status === "Active" ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"
+            row.status === "Active" ? "bg-blue-500/20 text-blue-300" : "bg-blue-500/20 text-blue-300"
           }`}
         >
           {row.status}
@@ -106,14 +106,14 @@ export default function UserManagementPage() {
           <button
             type="button"
             onClick={() => setEditingUser({ ...row })}
-            className="rounded-lg border border-cyan-300/30 px-2 py-1 text-xs text-cyan-600 hover:bg-cyan-400/10"
+            className="rounded-lg border border-blue-300/30 px-2 py-1 text-xs text-blue-600 hover:bg-blue-400/10"
           >
             Edit
           </button>
           <button
             type="button"
             onClick={() => deleteLocal(row.id)}
-            className="rounded-lg border border-rose-300/30 px-2 py-1 text-xs text-rose-200 hover:bg-rose-400/10"
+            className="rounded-lg border border-blue-300/30 px-2 py-1 text-xs text-blue-200 hover:bg-blue-400/10"
           >
             Delete
           </button>
@@ -179,7 +179,7 @@ export default function UserManagementPage() {
 
           <div className="flex items-end">
             <button
-              className="h-11 w-full rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-60"
+              className="h-11 w-full rounded-xl bg-blue-500 px-4 py-2 text-sm font-bold text-white disabled:opacity-60"
               type="submit"
               disabled={saving}
             >
@@ -207,7 +207,7 @@ export default function UserManagementPage() {
             <button
               type="button"
               onClick={saveEdit}
-              className="rounded-lg bg-cyan-400 px-3 py-2 text-xs font-bold text-slate-950"
+              className="rounded-lg bg-blue-400 px-3 py-2 text-xs font-bold text-slate-950"
             >
               Save
             </button>
@@ -237,3 +237,4 @@ export default function UserManagementPage() {
     </section>
   );
 }
+

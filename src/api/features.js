@@ -1,23 +1,4 @@
-import { apiFetch } from './client.js';
-
-// ═══════════════════════════════════════════════════════════════════════
-// 📋 BILL TEMPLATES
-// ═══════════════════════════════════════════════════════════════════════
-
-export async function createTemplate(payload) {
-  if (!payload.employeeEmail) throw new Error("Email is required");
-  return apiFetch("/bill-templates", { method: "POST", body: JSON.stringify(payload) });
-}
-
-export async function getTemplates(email) {
-  if (!email) throw new Error("Email is required");
-  return apiFetch(`/bill-templates?email=${encodeURIComponent(email)}`);
-}
-
-export async function deleteTemplate(templateId) {
-  if (!templateId) throw new Error("Template ID is required");
-  return apiFetch(`/bill-templates/${templateId}`, { method: "DELETE" });
-}
+import { apiFetch } from "./client.js";
 
 // ═══════════════════════════════════════════════════════════════════════
 // 💰 BUDGET MANAGEMENT
@@ -25,24 +6,29 @@ export async function deleteTemplate(templateId) {
 
 export async function createBudget(payload) {
   if (!payload.department || !payload.monthlyLimit) throw new Error("Required fields missing");
-  return apiFetch("/budgets", { method: "POST", body: JSON.stringify(payload) });
+  return apiFetch("/budgets", { method: "POST", body: payload });
 }
 
 export async function getBudgets(filters) {
-  if (!filters || !filters.email) throw new Error("Email is required");
   const params = new URLSearchParams();
-  Object.entries(filters).forEach(([k, v]) => {
+  Object.entries(filters || {}).forEach(([k, v]) => {
     if (v !== null && v !== undefined && v !== "") params.append(k, v);
   });
-  return apiFetch(`/budgets?${params.toString()}`);
+  const query = params.toString();
+  return apiFetch(query ? `/budgets?${query}` : "/budgets");
 }
 
 export async function updateBudgetSpent(budgetId, spentAmount) {
   if (!budgetId) throw new Error("Budget ID is required");
   return apiFetch(`/budgets/${budgetId}/update-spent`, {
     method: "PATCH",
-    body: JSON.stringify({ spentAmount }),
+    body: { spentAmount },
   });
+}
+
+export async function deleteBudget(budgetId) {
+  if (!budgetId) throw new Error("Budget ID is required");
+  return apiFetch(`/budgets/${budgetId}`, { method: "DELETE" });
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -51,7 +37,7 @@ export async function updateBudgetSpent(budgetId, spentAmount) {
 
 export async function createVendor(payload) {
   if (!payload.vendorName) throw new Error("Vendor name is required");
-  return apiFetch("/vendors", { method: "POST", body: JSON.stringify(payload) });
+  return apiFetch("/vendors", { method: "POST", body: payload });
 }
 
 export async function getVendors(status = null) {
@@ -63,7 +49,7 @@ export async function updateVendorStatus(vendorId, status) {
   if (!vendorId || !status) throw new Error("Vendor ID and status are required");
   return apiFetch(`/vendors/${vendorId}/status`, {
     method: "PATCH",
-    body: JSON.stringify({ status }),
+    body: { status },
   });
 }
 
@@ -75,7 +61,7 @@ export async function createComment(payload) {
   if (!payload.billId || !payload.authorEmail || !payload.comment) {
     throw new Error("Bill ID, author email, and comment are required");
   }
-  return apiFetch("/bill-comments", { method: "POST", body: JSON.stringify(payload) });
+  return apiFetch("/bill-comments", { method: "POST", body: payload });
 }
 
 export async function getBillComments(billId) {
@@ -96,7 +82,7 @@ export async function createAdvanceRequest(payload) {
   if (!payload.employeeEmail || !payload.amount || !payload.purpose) {
     throw new Error("Employee email, amount, and purpose are required");
   }
-  return apiFetch("/advance-requests", { method: "POST", body: JSON.stringify(payload) });
+  return apiFetch("/advance-requests", { method: "POST", body: payload });
 }
 
 export async function getAdvanceRequests(filters) {
@@ -112,7 +98,7 @@ export async function approveAdvanceRequest(advanceId, approverEmail, approvalCo
   if (!advanceId || !approverEmail) throw new Error("Advance ID and approver email are required");
   return apiFetch(`/advance-requests/${advanceId}/approve`, {
     method: "PATCH",
-    body: JSON.stringify({ approverEmail, approvalComments }),
+    body: { approverEmail, approvalComments },
   });
 }
 
@@ -120,25 +106,8 @@ export async function settleAdvanceRequest(advanceId, settlementAmount) {
   if (!advanceId) throw new Error("Advance ID is required");
   return apiFetch(`/advance-requests/${advanceId}/settle`, {
     method: "PATCH",
-    body: JSON.stringify({ settlementAmount }),
+    body: { settlementAmount },
   });
-}
-
-// ═══════════════════════════════════════════════════════════════════════
-// 📊 TRIP ANALYTICS
-// ═══════════════════════════════════════════════════════════════════════
-
-export async function computeTripAnalytics(sessionId) {
-  if (!sessionId) throw new Error("Session ID is required");
-  return apiFetch("/trip-analytics/compute", {
-    method: "POST",
-    body: JSON.stringify({ sessionId }),
-  });
-}
-
-export async function getTripAnalytics(sessionId) {
-  if (!sessionId) throw new Error("Session ID is required");
-  return apiFetch(`/trip-analytics/${sessionId}`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════
@@ -149,7 +118,7 @@ export async function createAuditLog(payload) {
   if (!payload.userEmail || !payload.action || !payload.entityType) {
     throw new Error("User email, action, and entity type are required");
   }
-  return apiFetch("/audit-logs", { method: "POST", body: JSON.stringify(payload) });
+  return apiFetch("/audit-logs", { method: "POST", body: payload });
 }
 
 export async function getAuditLogs(filters) {

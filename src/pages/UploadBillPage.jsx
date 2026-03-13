@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { apiFetch } from "../api/client";
 import Button from "../components/Button";
 import FileUpload from "../components/FileUpload";
@@ -42,7 +42,7 @@ export default function UploadBillPage() {
         ...prev,
         vendorName: result.vendor || prev.vendorName,
         billNumber: result.billNumber || prev.billNumber,
-        date: result.date || prev.date,
+        date: result.date || prev.date || new Date().toISOString().slice(0, 10),
         amount: result.amount != null ? String(result.amount) : prev.amount,
         category: result.category || prev.category,
       }));
@@ -153,25 +153,26 @@ export default function UploadBillPage() {
           <Button type="button" variant="secondary" onClick={scanBillWithOcr} disabled={scanning || !billFiles.length}>
             {scanning ? "Scanning Bill..." : "Scan Bill"}
           </Button>
-          {scanning ? <p className="text-sm text-cyan-500">Running OCR and extracting bill fields...</p> : null}
+          {scanning ? <p className="text-sm text-blue-500">Running OCR and extracting bill fields...</p> : null}
         </div>
 
         {ocrRawText ? (
           <details className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 text-xs text-slate-600">
-            <summary className="cursor-pointer text-cyan-500">View OCR extracted raw text</summary>
+            <summary className="cursor-pointer text-blue-500">View OCR extracted raw text</summary>
             <pre className="mt-2 max-h-36 overflow-auto whitespace-pre-wrap">{ocrRawText}</pre>
           </details>
         ) : null}
 
-        {error ? <p className="text-sm text-rose-300">{error}</p> : null}
+        {error ? <p className="text-sm text-blue-300">{error}</p> : null}
 
         <div className="flex flex-wrap items-center gap-3">
-          <button type="submit" disabled={submitting} className="rounded-xl bg-gradient-to-r from-cyan-400 to-violet-500 px-5 py-2.5 text-sm font-bold text-slate-950 disabled:opacity-60">
+          <button type="submit" disabled={submitting} className="rounded-xl bg-blue-500 px-5 py-2.5 text-sm font-bold text-white disabled:opacity-60">
             {submitting ? "Submitting..." : "Submit Bill"}
           </button>
-          {submitted ? <p className="text-sm text-emerald-300">Bill submitted successfully for approval.</p> : null}
+          {submitted ? <p className="text-sm text-blue-300">Bill submitted successfully for approval.</p> : null}
         </div>
       </form>
     </section>
   );
 }
+

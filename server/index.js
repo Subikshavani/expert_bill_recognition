@@ -4,7 +4,7 @@ const multer = require("multer");
 const bcrypt = require("bcryptjs");
 const Tesseract = require("tesseract.js");
 const pdfParse = require("pdf-parse");
-const { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, BillTemplate, BudgetLimit, Vendor, BillComment, AdvanceRequest, EnhancedAuditLog, TripAnalytics, initDatabase } = require("./db");
+const { User, Bill, AuditEvent, MonthlyExpense, BillOCRResult, TripSession, BudgetLimit, Vendor, BillComment, AdvanceRequest, EnhancedAuditLog, initDatabase } = require("./db");
 
 const app = express();
 
@@ -63,6 +63,10 @@ async function nextAuditId() {
 
 function parseBillRow(doc) {
   if (!doc) return null;
+  const sessionFromNotes = typeof doc.notes === "string"
+    ? (doc.notes.match(/\[Session:\s*([^\s\]]+)/)?.[1] || "")
+    : "";
+
   return {
     id: doc.id,
     billNumber: doc.bill_number,
@@ -74,10 +78,61 @@ function parseBillRow(doc) {
     status: doc.status,
     uploadedBy: doc.uploaded_by,
     uploadedByEmail: doc.uploaded_by_email || "",
+    sessionId: doc.sessionId || sessionFromNotes,
     notes: doc.notes || "",
     stage: doc.stage,
     files: doc.files || [],
   };
+}
+
+function extractSessionIdFromNotes(notes = "") {
+  return String(notes).match(/\[Session:\s*([^\s\]]+)/)?.[1] || "";
+}
+
+async function backfillBillSessionIds() {
+  const billsWithoutSession = await Bill.find(
+    {
+      $or: [
+        { sessionId: { $exists: false } },
+        { sessionId: "" },
+      ],
+      notes: { $regex: /\[Session:/ },
+    },
+    "id notes sessionId"
+  ).lean();
+
+  for (const bill of billsWithoutSession) {
+    const sessionId = extractSessionIdFromNotes(bill.notes);
+    if (!sessionId) continue;
+    await Bill.updateOne(
+      { id: bill.id },
+      { $set: { sessionId } }
+    ).catch(() => {});
+  }
+
+  const users = await User.find(
+    { "submittedBills.notes": { $regex: /\[Session:/ } },
+    "submittedBills"
+  );
+
+  for (const user of users) {
+    let changed = false;
+    user.submittedBills = (user.submittedBills || []).map((bill) => {
+      if (bill.sessionId) return bill;
+      const sessionId = extractSessionIdFromNotes(bill.notes);
+      if (!sessionId) return bill;
+      changed = true;
+      return {
+        ...(bill.toObject?.() || bill),
+        sessionId,
+        updatedAt: new Date(),
+      };
+    });
+
+    if (changed) {
+      await user.save().catch(() => {});
+    }
+  }
 }
 
 function parseUserRow(doc) {
@@ -110,7 +165,13 @@ function parseTripSession(doc) {
 
 function normalizeDate(raw) {
   if (!raw) return "";
-  const parsed = new Date(raw.replace(/(\d{2})\/(\d{2})\/(\d{4})/, "$3-$2-$1"));
+  const cleaned = String(raw).trim();
+  const normalized = cleaned
+    .replace(/(\d{1,2})\/(\d{1,2})\/(\d{4})/, "$3-$2-$1")
+    .replace(/(\d{1,2})-(\d{1,2})-(\d{4})/, "$3-$2-$1")
+    .replace(/(\d{1,2})\.(\d{1,2})\.(\d{4})/, "$3-$2-$1");
+
+  const parsed = new Date(normalized);
   if (Number.isNaN(parsed.getTime())) return "";
   return parsed.toISOString().slice(0, 10);
 }
@@ -132,6 +193,33 @@ function inferCategory(text) {
   return "";
 }
 
+function pickVendorFromLines(lines) {
+  const skipPattern = /^(invoice|inv\b|bill\b|date\b|amount\b|tax\b|description\b|qty\b|price\b|total\b)/i;
+  const emailOrUrl = /@|\.(com|in|org|net)\b/i;
+
+  for (const line of lines) {
+    if (!line || line.length < 3) continue;
+    if (skipPattern.test(line)) continue;
+    if (/^\d+$/.test(line)) continue;
+    if (emailOrUrl.test(line)) continue;
+    return line;
+  }
+
+  return "";
+}
+
+function extractFallbackAmount(rawText) {
+  const matches = rawText.match(/(?:rs\.?|inr|\$)\s*([\d,]+(?:\.\d{1,2})?)/gi) || [];
+  if (!matches.length) return null;
+
+  const numbers = matches
+    .map((m) => Number(String(m).replace(/[^\d.]/g, "")))
+    .filter((n) => Number.isFinite(n));
+
+  if (!numbers.length) return null;
+  return Math.max(...numbers);
+}
+
 function parseBillText(rawText) {
   const lines = rawText
     .split(/\r?\n/)
@@ -142,7 +230,7 @@ function parseBillText(rawText) {
     extractFirstMatch(rawText, [
       /(?:vendor|supplier|merchant)\s*[:\-]\s*([^\n]+)/i,
       /(?:m\/?s\.?|from)\s*[:\-]\s*([^\n]+)/i,
-    ]) || lines[0] || "";
+    ]) || pickVendorFromLines(lines) || lines[0] || "";
 
   const billNumber = extractFirstMatch(rawText, [
     /(?:bill|invoice|inv)\s+(?:no\.?|number|#)\s*[:#\-]?\s*([A-Z0-9\-\/]{4,})/i,
@@ -152,18 +240,22 @@ function parseBillText(rawText) {
 
   const rawDate = extractFirstMatch(rawText, [
     /(?:date)\s*[:\-]\s*(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/i,
+    /(?:date)\s*[:\-]\s*(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/i,
     /(\d{4}[\/\-.]\d{1,2}[\/\-.]\d{1,2})/i,
     /(\d{1,2}[\/\-.]\d{1,2}[\/\-.]\d{2,4})/i,
+    /(\d{1,2}\s+[A-Za-z]{3,9}\s+\d{4})/i,
   ]);
 
   const amountRaw = extractFirstMatch(rawText, [
-    /(?:total\s*amount|grand\s*total|amount\s*payable|total)\s*[:\-]?\s*(?:rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
+    /(?:amount\s*due|total\s*amount|grand\s*total|amount\s*payable|net\s*amount|total)\s*[:\-]?\s*(?:rs\.?|inr|\$)?\s*([\d,]+(?:\.\d{1,2})?)/i,
   ]);
   const taxRaw = extractFirstMatch(rawText, [
     /(?:tax|gst|vat)\s*[:\-]?\s*(?:rs\.?|inr)?\s*([\d,]+(?:\.\d{1,2})?)/i,
   ]);
 
-  const amount = amountRaw ? Number(String(amountRaw).replace(/,/g, "")) : null;
+  const amount = amountRaw
+    ? Number(String(amountRaw).replace(/,/g, ""))
+    : extractFallbackAmount(rawText);
   const taxAmount = taxRaw ? Number(String(taxRaw).replace(/,/g, "")) : null;
 
   return {
@@ -414,10 +506,49 @@ app.get("/api/bills", async (req, res) => {
       query.status = req.query.status;
     }
 
+    if (req.query.sessionId) {
+      const sid = String(req.query.sessionId).trim();
+      query.sessionId = sid;
+    }
+
+    if (req.query.employeeEmail) {
+      query.uploaded_by_email = String(req.query.employeeEmail).toLowerCase().trim();
+    }
+
     const rows = await Bill.find(query).sort({ createdAt: -1 }).lean();
     res.json(rows.map(parseBillRow));
   } catch (error) {
     res.status(500).json({ error: "Failed to load bills." });
+  }
+});
+
+app.get("/api/bills/session/:sessionId", async (req, res) => {
+  try {
+    const sessionId = String(req.params.sessionId || "").trim();
+    if (!sessionId) {
+      return res.status(400).json({ error: "Session ID is required." });
+    }
+
+    const rows = await Bill.find({ sessionId })
+      .sort({ createdAt: -1 })
+      .lean();
+
+    const bills = rows.map(parseBillRow);
+    const byStatus = bills.reduce((acc, bill) => {
+      acc[bill.status] = (acc[bill.status] || 0) + 1;
+      return acc;
+    }, {});
+    const totalAmount = bills.reduce((sum, bill) => sum + (Number(bill.amount) || 0), 0);
+
+    res.json({
+      sessionId,
+      count: bills.length,
+      totalAmount,
+      byStatus,
+      bills,
+    });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to load session bills." });
   }
 });
 
@@ -436,10 +567,46 @@ app.post(
   upload.fields([{ name: "billFile", maxCount: 5 }, { name: "supportFile", maxCount: 5 }]),
   async (req, res) => {
     try {
-      const { billNumber, vendorName, category, amount, date, department, uploadedBy = "Current User", notes = "" } = req.body;
+      const {
+        billNumber,
+        vendorName,
+        category,
+        amount,
+        date,
+        department,
+        uploadedBy = "Current User",
+        notes = "",
+        sessionId = "",
+        uploadedByEmail = "",
+      } = req.body;
       if (!billNumber || !vendorName || !amount || !date || !department) {
         return res.status(400).json({ error: "Required fields missing." });
       }
+
+      const normalizedEmail = String(uploadedByEmail).toLowerCase().trim();
+      const requestedSessionId = String(sessionId).trim();
+      let resolvedSessionId = requestedSessionId;
+      let activeTripName = "";
+
+      if (normalizedEmail) {
+        const activeSession = await TripSession.findOne({
+          employeeEmail: normalizedEmail,
+          sessionStatus: "Active",
+        }).lean();
+
+        if (activeSession) {
+          if (requestedSessionId && requestedSessionId !== activeSession.sessionId) {
+            return res.status(400).json({ error: "Provided session ID does not match active trip session." });
+          }
+          resolvedSessionId = activeSession.sessionId;
+          activeTripName = activeSession.tripName || "";
+        }
+      }
+
+      const sessionSuffix = resolvedSessionId
+        ? ` [Session: ${resolvedSessionId}${activeTripName ? ` - ${activeTripName}` : ""}]`
+        : "";
+      const notesWithSession = notes.includes("[Session:") ? notes : `${notes}${sessionSuffix}`;
 
       const files = [];
       if (req.files?.billFile) files.push(...req.files.billFile.map((f) => f.originalname));
@@ -456,8 +623,9 @@ app.post(
         department,
         status: "Uploaded",
         uploaded_by: uploadedBy,
-        uploaded_by_email: req.body.uploadedByEmail || "",
-        notes,
+        uploaded_by_email: normalizedEmail,
+        sessionId: resolvedSessionId,
+        notes: notesWithSession,
         stage: 1,
         files,
       };
@@ -520,6 +688,10 @@ app.post(
           error: "Trip session ended. Bill uploads are no longer allowed.",
         });
       }
+
+      if (sessionId && sessionId !== activeSession.sessionId) {
+        return res.status(400).json({ error: "Provided session ID does not match active trip session." });
+      }
       // ─────────────────────────────────────────────────────────────────────
 
       const files = [];
@@ -538,6 +710,7 @@ app.post(
         status: "Uploaded",
         uploaded_by: employeeName || employeeEmail,
         uploaded_by_email: normalizedEmail,
+        sessionId: activeSession.sessionId,
         notes: notes + (activeSession.sessionId ? ` [Session: ${activeSession.sessionId} – ${activeSession.tripName}]` : ""),
         stage: 1,
         files,
@@ -554,6 +727,20 @@ app.post(
         timestamp: nowTs(),
         comments: `Files: ${files.join(", ") || "none"}`,
       }).save();
+
+      // Also store employee bill details in employee collection (User document).
+      await User.updateOne(
+        { email: normalizedEmail },
+        {
+          $push: {
+            submittedBills: {
+              ...billData,
+              createdAt: new Date(),
+              updatedAt: new Date(),
+            },
+          },
+        }
+      ).catch(() => {});
 
       // Auto-OCR: run in background so upload response is not delayed
       if (req.files && (req.files.billFile || req.files.supportFile)) {
@@ -574,7 +761,14 @@ app.get("/api/employee/bills", async (req, res) => {
       return res.status(400).json({ error: "Employee email is required." });
     }
 
-    const rows = await Bill.find({ uploaded_by_email: employeeEmail }).sort({ createdAt: -1 }).lean();
+    const user = await User.findOne({ email: employeeEmail }, "submittedBills -_id").lean();
+    const employeeBills = Array.isArray(user?.submittedBills) ? user.submittedBills : [];
+
+    // Backward compatibility for older records before employee collection sync existed.
+    const rows = employeeBills.length
+      ? [...employeeBills].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+      : await Bill.find({ uploaded_by_email: employeeEmail }).sort({ createdAt: -1 }).lean();
+
     res.json(rows.map(parseBillRow));
   } catch (error) {
     res.status(500).json({ error: "Failed to load employee bills." });
@@ -588,14 +782,40 @@ app.get("/api/employee/bills/status", async (req, res) => {
       return res.status(400).json({ error: "Employee email is required." });
     }
 
-    const rows = await Bill.find({ uploaded_by_email: employeeEmail }, "id bill_number status date amount vendor department notes -_id")
-      .sort({ createdAt: -1 })
-      .lean();
+    const user = await User.findOne({ email: employeeEmail }, "submittedBills -_id").lean();
+    const employeeBills = Array.isArray(user?.submittedBills) ? user.submittedBills : [];
+
+    // Backward compatibility for older records before employee collection sync existed.
+    const rows = employeeBills.length
+      ? [...employeeBills]
+          .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+          .map((row) => ({
+            id: row.id,
+            bill_number: row.bill_number,
+            status: row.status,
+            date: row.date,
+            amount: row.amount,
+            vendor: row.vendor,
+            department: row.department,
+            sessionId: row.sessionId || "",
+            notes: row.notes || "",
+          }))
+      : await Bill.find(
+          { uploaded_by_email: employeeEmail },
+          "id bill_number status date amount vendor department sessionId notes -_id"
+        )
+          .sort({ createdAt: -1 })
+          .lean();
 
     const billIds = rows.map((row) => row.id);
     const events = await AuditEvent.find({ bill_id: { $in: billIds } }, "bill_id action user timestamp comments -_id")
       .sort({ createdAt: 1 })
       .lean();
+
+    const ocrRows = await BillOCRResult.find(
+      { billId: { $in: billIds } },
+      "billId status processedAt errorMessage confidence -_id"
+    ).lean();
 
     const timelineMap = new Map();
     for (const event of events) {
@@ -608,8 +828,20 @@ app.get("/api/employee/bills/status", async (req, res) => {
       });
     }
 
+    const ocrMap = new Map();
+    for (const ocr of ocrRows) {
+      ocrMap.set(ocr.billId, ocr);
+    }
+
+    function mapAnalysisStatus(ocrStatus) {
+      if (ocrStatus === "success") return "Analyzed";
+      if (ocrStatus === "failed") return "Analysis Failed";
+      return "Analyzing";
+    }
+
     res.json(
       rows.map((row) => ({
+        ocr: ocrMap.get(row.id) || null,
         id: row.id,
         billNumber: row.bill_number,
         status: row.status,
@@ -617,7 +849,15 @@ app.get("/api/employee/bills/status", async (req, res) => {
         amount: row.amount,
         vendor: row.vendor,
         department: row.department,
+        sessionId: row.sessionId || "",
         notes: row.notes || "",
+        analysisStatus: mapAnalysisStatus(ocrMap.get(row.id)?.status),
+        analysisProcessedAt: ocrMap.get(row.id)?.processedAt || null,
+        analysisError: ocrMap.get(row.id)?.errorMessage || "",
+        analysisConfidence:
+          typeof ocrMap.get(row.id)?.confidence === "number"
+            ? ocrMap.get(row.id).confidence
+            : null,
         timeline: timelineMap.get(row.id) || [],
       }))
     );
@@ -648,6 +888,20 @@ app.post("/api/bills/:id/action", async (req, res) => {
     }
 
     await bill.save();
+
+    // Keep employee collection in sync with latest approval status/stage.
+    if (bill.uploaded_by_email) {
+      await User.updateOne(
+        { email: String(bill.uploaded_by_email).toLowerCase().trim(), "submittedBills.id": bill.id },
+        {
+          $set: {
+            "submittedBills.$.status": bill.status,
+            "submittedBills.$.stage": bill.stage,
+            "submittedBills.$.updatedAt": new Date(),
+          },
+        }
+      ).catch(() => {});
+    }
 
     const auditId = await nextAuditId();
     await new AuditEvent({ id: auditId, bill_id: bill.id, action, user, timestamp: nowTs(), comments: comment }).save();
@@ -1142,55 +1396,6 @@ app.patch("/api/trip-session/:sessionId/end", async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 📋 BILL TEMPLATES
-// ═══════════════════════════════════════════════════════════════════════
-
-app.post("/api/bill-templates", async (req, res) => {
-  try {
-    const { employeeEmail, templateName, vendor, category, description } = req.body;
-    if (!employeeEmail || !templateName || !vendor || !category) {
-      return res.status(400).json({ error: "Required fields missing." });
-    }
-    const templateId = `TMPL-${Date.now()}`;
-    const template = await BillTemplate.create({
-      templateId,
-      employeeEmail: employeeEmail.toLowerCase().trim(),
-      templateName,
-      vendor,
-      category,
-      description,
-    });
-    res.status(201).json(template);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create template." });
-  }
-});
-
-app.get("/api/bill-templates", async (req, res) => {
-  try {
-    const { email } = req.query;
-    if (!email) return res.status(400).json({ error: "Email is required." });
-    const templates = await BillTemplate.find({
-      employeeEmail: email.toLowerCase().trim(),
-      isActive: true,
-    }).lean();
-    res.json(templates);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch templates." });
-  }
-});
-
-app.delete("/api/bill-templates/:templateId", async (req, res) => {
-  try {
-    const { templateId } = req.params;
-    await BillTemplate.findOneAndUpdate({ templateId }, { isActive: false }, { new: true });
-    res.json({ message: "Template deleted." });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to delete template." });
-  }
-});
-
-// ═══════════════════════════════════════════════════════════════════════
 // 💰 BUDGET MANAGEMENT
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -1227,8 +1432,72 @@ app.get("/api/budgets", async (req, res) => {
       query.year = parseInt(year);
       query.month = parseInt(month);
     }
+    query.isActive = true;
+
     const budgets = await BudgetLimit.find(query).lean();
-    res.json(budgets);
+
+    const enrichedBudgets = await Promise.all(
+      budgets.map(async (budget) => {
+        const yearNum = Number(budget.year);
+        const monthNum = Number(budget.month);
+        const monthStart = new Date(Date.UTC(yearNum, monthNum - 1, 1, 0, 0, 0));
+        const monthEnd = new Date(Date.UTC(yearNum, monthNum, 1, 0, 0, 0));
+        const billQuery = {
+          createdAt: { $gte: monthStart, $lt: monthEnd },
+        };
+
+        if (budget.budgetType === "employee" && budget.employeeEmail) {
+          billQuery.uploaded_by_email = budget.employeeEmail.toLowerCase().trim();
+        } else {
+          billQuery.department = budget.department;
+        }
+
+        const matchedBills = await Bill.find(billQuery, "id amount -_id").lean();
+        const billIds = matchedBills.map((bill) => bill.id);
+
+        const ocrRows = billIds.length
+          ? await BillOCRResult.find(
+              { billId: { $in: billIds } },
+              "billId amount status -_id"
+            ).lean()
+          : [];
+
+        const ocrMap = new Map(ocrRows.map((row) => [row.billId, row]));
+
+        let spent = 0;
+        let analyzedBills = 0;
+
+        for (const bill of matchedBills) {
+          const ocr = ocrMap.get(bill.id);
+          const hasOcrAmount =
+            ocr && ocr.status === "success" && typeof ocr.amount === "number";
+
+          if (hasOcrAmount) {
+            spent += Number(ocr.amount) || 0;
+            analyzedBills += 1;
+          } else {
+            spent += Number(bill.amount) || 0;
+          }
+        }
+
+        const monthlyLimit = Number(budget.monthlyLimit) || 0;
+        const totalBills = matchedBills.length;
+        const remaining = Math.max(0, monthlyLimit - spent);
+
+        return {
+          ...budget,
+          spent,
+          remaining,
+          totalBills,
+          analyzedBills,
+          analysisCoverage: totalBills
+            ? Math.round((analyzedBills / totalBills) * 100)
+            : 0,
+        };
+      })
+    );
+
+    res.json(enrichedBudgets);
   } catch (error) {
     res.status(500).json({ error: "Failed to fetch budgets." });
   }
@@ -1249,6 +1518,27 @@ app.patch("/api/budgets/:budgetId/update-spent", async (req, res) => {
     res.json(budget);
   } catch (error) {
     res.status(500).json({ error: "Failed to update budget." });
+  }
+});
+
+app.delete("/api/budgets/:budgetId", async (req, res) => {
+  try {
+    const { budgetId } = req.params;
+    if (!budgetId) {
+      return res.status(400).json({ error: "Budget ID is required." });
+    }
+
+    const budget = await BudgetLimit.findOne({ budgetId });
+    if (!budget) {
+      return res.status(404).json({ error: "Budget not found." });
+    }
+
+    budget.isActive = false;
+    await budget.save();
+
+    res.json({ success: true, message: "Budget deleted successfully." });
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete budget." });
   }
 });
 
@@ -1427,69 +1717,6 @@ app.patch("/api/advance-requests/:advanceId/settle", async (req, res) => {
 });
 
 // ═══════════════════════════════════════════════════════════════════════
-// 📊 TRIP ANALYTICS
-// ═══════════════════════════════════════════════════════════════════════
-
-app.post("/api/trip-analytics/compute", async (req, res) => {
-  try {
-    const { sessionId } = req.body;
-    if (!sessionId) return res.status(400).json({ error: "Session ID is required." });
-    
-    const session = await TripSession.findOne({ sessionId }).lean();
-    if (!session) return res.status(404).json({ error: "Session not found." });
-
-    const bills = await Bill.find({
-      notes: { $regex: sessionId },
-      uploaded_by_email: session.employeeEmail,
-    }).lean();
-
-    const categoryBreakdown = {};
-    let totalAmount = 0, approvedAmount = 0, pendingAmount = 0, rejectedAmount = 0;
-
-    bills.forEach((bill) => {
-      totalAmount += bill.amount;
-      if (bill.status === "Approved") approvedAmount += bill.amount;
-      else if (["Uploaded", "Under Accounts Review", "Manager Approval", "Finance Approval"].includes(bill.status))
-        pendingAmount += bill.amount;
-      else if (bill.status === "Rejected") rejectedAmount += bill.amount;
-
-      categoryBreakdown[bill.category] = (categoryBreakdown[bill.category] || 0) + bill.amount;
-    });
-
-    const analyticsId = `ANALYTICS-${Date.now()}`;
-    const analytics = await TripAnalytics.create({
-      analyticsId,
-      sessionId,
-      employeeEmail: session.employeeEmail,
-      tripName: session.tripName,
-      startDate: session.startDate,
-      endDate: session.endDate,
-      totalBills: bills.length,
-      totalAmount,
-      approvedAmount,
-      pendingAmount,
-      rejectedAmount,
-      categoryBreakdown,
-    });
-
-    res.json(analytics);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to compute analytics." });
-  }
-});
-
-app.get("/api/trip-analytics/:sessionId", async (req, res) => {
-  try {
-    const { sessionId } = req.params;
-    const analytics = await TripAnalytics.findOne({ sessionId }).lean();
-    if (!analytics) return res.status(404).json({ error: "Analytics not found." });
-    res.json(analytics);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to fetch analytics." });
-  }
-});
-
-// ═══════════════════════════════════════════════════════════════════════
 // 🔐 ENHANCED AUDIT LOGGING
 // ═══════════════════════════════════════════════════════════════════════
 
@@ -1589,33 +1816,24 @@ app.use((error, _req, res, next) => {
 
 const PORT = Number(process.env.PORT) || 3001;
 
-function startServer(initialPort, maxPortRetries = 3) {
-  let remainingRetries = maxPortRetries;
+function startServer(port) {
+  const server = app.listen(port, () => {
+    console.log(`Expense-API running -> http://localhost:${port}`);
+  });
 
-  const listenOnPort = (port) => {
-    const server = app.listen(port, () => {
-      console.log(`Expense-API running -> http://localhost:${port}`);
-    });
-
-    server.on("error", (error) => {
-      if (error?.code === "EADDRINUSE" && remainingRetries > 0) {
-        remainingRetries -= 1;
-        const nextPort = port + 1;
-        console.warn(`Port ${port} is in use. Retrying on port ${nextPort}...`);
-        listenOnPort(nextPort);
-        return;
-      }
-
+  server.on("error", (error) => {
+    if (error?.code === "EADDRINUSE") {
+      console.error(`Port ${port} is already in use. Stop the conflicting process and try again.`);
+    } else {
       console.error("Server failed to start:", error);
-      process.exit(1);
-    });
-  };
-
-  listenOnPort(initialPort);
+    }
+    process.exit(1);
+  });
 }
 
 initDatabase()
-  .then(() => {
+  .then(async () => {
+    await backfillBillSessionIds().catch(() => {});
     startServer(PORT);
   })
   .catch((error) => {

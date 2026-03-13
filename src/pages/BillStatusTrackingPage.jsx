@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
 import LoadingSpinner from "../components/LoadingSpinner";
 import ProgressTracker from "../components/ProgressTracker";
 import { useApi } from "../hooks/useApi";
@@ -24,7 +24,7 @@ export default function BillStatusTrackingPage() {
   );
 
   if (billsLoading || auditLoading) return <LoadingSpinner message="Loading status tracker..." />;
-  if (billsError || auditError) return <p className="p-4 text-rose-400">Error: {billsError || auditError}</p>;
+  if (billsError || auditError) return <p className="p-4 text-blue-400">Error: {billsError || auditError}</p>;
 
   return (
     <section className="space-y-6">
@@ -66,3 +66,4 @@ export default function BillStatusTrackingPage() {
     </section>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
 import LoadingSpinner from "../components/LoadingSpinner";
 import { useApi } from "../hooks/useApi";
@@ -33,7 +33,7 @@ export default function AuditTrailPage() {
   );
 
   if (eventsLoading || usersLoading) return <LoadingSpinner message="Loading audit logs..." />;
-  if (eventsError) return <p className="p-4 text-rose-400">Error: {eventsError}</p>;
+  if (eventsError) return <p className="p-4 text-blue-400">Error: {eventsError}</p>;
 
   const columns = [
     { key: "billId", header: "Bill ID" },
@@ -75,3 +75,4 @@ export default function AuditTrailPage() {
     </section>
   );
 }
+

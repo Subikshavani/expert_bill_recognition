@@ -1,4 +1,4 @@
-import { LockKeyhole, Mail } from "lucide-react";
+﻿import { LockKeyhole, Mail } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiFetch } from "../api/client";
@@ -30,13 +30,13 @@ export default function EmployeeLoginPage({ onLogin }) {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(6,182,212,0.07),transparent_35%),radial-gradient(circle_at_85%_10%,rgba(59,130,246,0.07),transparent_30%),linear-gradient(160deg,#f0f9ff_0%,#f8fafc_50%,#ffffff_100%)]" />
+      <div className="absolute inset-0 bg-slate-50" />
       <div className="panel relative z-10 w-full max-w-md rounded-3xl p-8 shadow-2xl">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 to-blue-500 text-slate-900">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-400 text-slate-900">
             <LockKeyhole className="h-6 w-6" />
           </div>
-          <p className="text-xs uppercase tracking-[0.24em] text-cyan-500">Expense Management</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-blue-500">Expense Management</p>
           <h1 className="page-title mt-2 text-2xl font-bold text-slate-800">Employee Login</h1>
           <p className="mt-2 text-sm text-slate-400">Access your bills, status, and profile</p>
         </div>
@@ -50,7 +50,7 @@ export default function EmployeeLoginPage({ onLogin }) {
                 type="email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
-                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-cyan-400/70"
+                className="w-full rounded-xl border border-slate-200 bg-white py-2.5 pl-9 pr-3 text-sm text-slate-800 outline-none focus:border-blue-400/70"
                 required
               />
             </div>
@@ -62,17 +62,17 @@ export default function EmployeeLoginPage({ onLogin }) {
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-cyan-400/70"
+              className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-800 outline-none focus:border-blue-400/70"
               required
             />
           </label>
 
-          {error ? <p className="text-xs text-rose-300">{error}</p> : null}
+          {error ? <p className="text-xs text-blue-300">{error}</p> : null}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-xl bg-gradient-to-r from-cyan-400 to-blue-500 px-4 py-2.5 text-sm font-bold text-slate-950 disabled:opacity-60"
+            className="w-full rounded-xl bg-blue-500 px-4 py-2.5 text-sm font-bold text-white disabled:opacity-60"
           >
             {loading ? "Signing in..." : "Login"}
           </button>
@@ -81,3 +81,4 @@ export default function EmployeeLoginPage({ onLogin }) {
     </div>
   );
 }
+

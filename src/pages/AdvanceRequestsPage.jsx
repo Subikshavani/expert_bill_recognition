@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { Clock, CheckCircle, XCircle, Plus } from "lucide-react";
 import Button from "../components/Button";
 import FormInput from "../components/FormInput";
@@ -71,13 +71,13 @@ export default function AdvanceRequestsPage({ user }) {
   const getStatusIcon = (status) => {
     switch (status) {
       case "approved":
-        return <CheckCircle size={16} className="text-emerald-400" />;
+        return <CheckCircle size={16} className="text-blue-400" />;
       case "rejected":
-        return <XCircle size={16} className="text-rose-400" />;
+        return <XCircle size={16} className="text-blue-400" />;
       case "pending":
-        return <Clock size={16} className="text-yellow-400" />;
+        return <Clock size={16} className="text-blue-400" />;
       case "settled":
-        return <CheckCircle size={16} className="text-cyan-400" />;
+        return <CheckCircle size={16} className="text-blue-400" />;
       default:
         return null;
     }
@@ -86,13 +86,13 @@ export default function AdvanceRequestsPage({ user }) {
   const getStatusColor = (status) => {
     switch (status) {
       case "approved":
-        return "bg-emerald-100/20 text-emerald-600 dark:bg-emerald-900/20 dark:text-emerald-400";
+        return "bg-blue-100/20 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
       case "rejected":
-        return "bg-rose-100/20 text-rose-600 dark:bg-rose-900/20 dark:text-rose-400";
+        return "bg-blue-100/20 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
       case "pending":
-        return "bg-yellow-100/20 text-yellow-600 dark:bg-yellow-900/20 dark:text-yellow-400";
+        return "bg-blue-100/20 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
       case "settled":
-        return "bg-cyan-100/20 text-cyan-600 dark:bg-cyan-900/20 dark:text-cyan-400";
+        return "bg-blue-100/20 text-blue-600 dark:bg-blue-900/20 dark:text-blue-400";
       default:
         return "";
     }
@@ -113,11 +113,11 @@ export default function AdvanceRequestsPage({ user }) {
           <h2 className="page-title text-2xl font-bold">Advance Requests</h2>
           <p className="mt-2 text-sm text-slate-400">Request and manage trip advances</p>
         </div>
-        <div className="panel rounded-2xl border border-rose-200/30 bg-rose-500/5 p-8 shadow-panel dark:border-rose-800/30 dark:bg-rose-900/10">
-          <p className="text-sm text-rose-600 dark:text-rose-400 mb-4">{error}</p>
+        <div className="panel rounded-2xl border border-blue-200/30 bg-blue-500/5 p-8 shadow-panel dark:border-blue-800/30 dark:bg-blue-900/10">
+          <p className="text-sm text-blue-600 dark:text-blue-400 mb-4">{error}</p>
           <button
             onClick={() => fetchRequests()}
-            className="px-4 py-2 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-600 dark:text-rose-400 font-medium transition-colors text-sm"
+            className="px-4 py-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 text-blue-600 dark:text-blue-400 font-medium transition-colors text-sm"
           >
             Retry
           </button>
@@ -141,7 +141,7 @@ export default function AdvanceRequestsPage({ user }) {
               onClick={() => setFilter(s)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                 filter === s
-                  ? "bg-cyan-500 text-white"
+                  ? "bg-blue-500 text-white"
                   : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
             >
@@ -167,7 +167,7 @@ export default function AdvanceRequestsPage({ user }) {
                 required
               />
               <FormInput
-                label="Amount (₹)"
+                label="Amount (â‚¹)"
                 type="number"
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
@@ -189,7 +189,7 @@ export default function AdvanceRequestsPage({ user }) {
                 required
               />
             </div>
-            {error && <p className="text-sm text-rose-400">{error}</p>}
+            {error && <p className="text-sm text-blue-400">{error}</p>}
             <div className="flex gap-2">
               <Button type="submit">Submit Request</Button>
               <Button type="button" variant="secondary" onClick={() => setShowForm(false)}>
@@ -200,7 +200,7 @@ export default function AdvanceRequestsPage({ user }) {
         </div>
       )}
 
-      {success && <p className="text-sm text-emerald-400">{success}</p>}
+      {success && <p className="text-sm text-blue-400">{success}</p>}
 
       <div className="space-y-3">
         {requests.map((req) => (
@@ -221,7 +221,7 @@ export default function AdvanceRequestsPage({ user }) {
             <div className="grid grid-cols-3 gap-4 mb-3 pt-3 border-t border-slate-200 dark:border-slate-700">
               <div>
                 <p className="text-xs text-slate-400">Requested Amount</p>
-                <p className="font-semibold text-cyan-500">₹{req.amount.toLocaleString()}</p>
+                <p className="font-semibold text-blue-500">â‚¹{req.amount.toLocaleString()}</p>
               </div>
               <div>
                 <p className="text-xs text-slate-400">Request Date</p>
@@ -230,7 +230,7 @@ export default function AdvanceRequestsPage({ user }) {
               {req.requestStatus === "settled" && (
                 <div>
                   <p className="text-xs text-slate-400">Settled Amount</p>
-                  <p className="font-semibold text-emerald-500">₹{req.settlementAmount.toLocaleString()}</p>
+                  <p className="font-semibold text-blue-500">â‚¹{req.settlementAmount.toLocaleString()}</p>
                 </div>
               )}
             </div>
@@ -253,3 +253,4 @@ export default function AdvanceRequestsPage({ user }) {
     </section>
   );
 }
+

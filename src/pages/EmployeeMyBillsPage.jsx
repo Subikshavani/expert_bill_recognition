@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Modal from "../components/Modal";
@@ -28,7 +28,7 @@ export default function EmployeeMyBillsPage({ user }) {
     {
       key: "status",
       header: "Status",
-      render: (row) => <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-2 py-1 text-xs text-cyan-600">{row.status}</span>,
+      render: (row) => <span className="rounded-full border border-blue-300/30 bg-blue-400/10 px-2 py-1 text-xs text-blue-600">{row.status}</span>,
     },
     {
       key: "actions",
@@ -46,7 +46,7 @@ export default function EmployeeMyBillsPage({ user }) {
   ];
 
   if (loading) return <LoadingSpinner message="Loading your bills..." />;
-  if (error) return <p className="p-4 text-rose-300">Error: {error}</p>;
+  if (error) return <p className="p-4 text-blue-300">Error: {error}</p>;
 
   return (
     <section className="space-y-5">
@@ -83,3 +83,4 @@ export default function EmployeeMyBillsPage({ user }) {
     </section>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+﻿import { useMemo, useState } from "react";
 import DataTable from "../components/DataTable";
 import LoadingSpinner from "../components/LoadingSpinner";
 import Modal from "../components/Modal";
@@ -40,7 +40,7 @@ export default function BillsListPage() {
   );
 
   if (loading) return <LoadingSpinner message="Loading bills..." />;
-  if (error) return <p className="p-4 text-rose-400">Error: {error}</p>;
+  if (error) return <p className="p-4 text-blue-400">Error: {error}</p>;
 
   const columns = [
     { key: "id", header: "Bill ID" },
@@ -52,7 +52,7 @@ export default function BillsListPage() {
       key: "status",
       header: "Status",
       render: (row) => (
-        <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-2 py-1 text-xs text-cyan-600">{row.status}</span>
+        <span className="rounded-full border border-blue-300/30 bg-blue-400/10 px-2 py-1 text-xs text-blue-600">{row.status}</span>
       ),
     },
     {
@@ -115,10 +115,10 @@ export default function BillsListPage() {
               <p className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700"><strong>Amount:</strong> ${Number(selectedBill.amount).toLocaleString()}</p>
             </div>
             {ocrLoading ? (
-              <p className="text-xs text-cyan-500 animate-pulse">Fetching extracted data from file...</p>
+              <p className="text-xs text-blue-500 animate-pulse">Fetching extracted data from file...</p>
             ) : ocrData?.status === "success" ? (
-              <div className="rounded-xl border border-cyan-500/30 bg-cyan-400/5 p-4">
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-cyan-500">Extracted Data</p>
+              <div className="rounded-xl border border-blue-500/30 bg-blue-400/5 p-4">
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-blue-500">Extracted Data</p>
                 <div className="grid gap-2 text-sm md:grid-cols-2">
                   {ocrData.vendor ? <p><span className="text-slate-400">Vendor: </span><span className="text-slate-800">{ocrData.vendor}</span></p> : null}
                   {ocrData.billNumber ? <p><span className="text-slate-400">Invoice No: </span><span className="text-slate-800">{ocrData.billNumber}</span></p> : null}
@@ -128,7 +128,7 @@ export default function BillsListPage() {
                 </div>
                 {ocrData.rawText ? (
                   <details className="mt-2 text-xs">
-                    <summary className="cursor-pointer text-cyan-400">View raw extracted text</summary>
+                    <summary className="cursor-pointer text-blue-400">View raw extracted text</summary>
                     <pre className="mt-1 max-h-28 overflow-auto whitespace-pre-wrap text-slate-600">{ocrData.rawText}</pre>
                   </details>
                 ) : null}
@@ -140,3 +140,4 @@ export default function BillsListPage() {
     </section>
   );
 }
+

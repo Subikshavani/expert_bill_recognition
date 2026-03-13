@@ -1,4 +1,4 @@
-import { Bell, ChevronDown, LogOut, Menu, Moon, Search, Sun, UserCircle2 } from "lucide-react";
+﻿import { Bell, ChevronDown, LogOut, Menu, Moon, Search, Sun, UserCircle2 } from "lucide-react";
 import { useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 
@@ -17,13 +17,13 @@ export default function Navbar({ role, onMenuClick, onLogout, profileLabel = "Ad
             <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
             <input
               placeholder="Search bills, users, actions..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-500 focus:border-cyan-400/70"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2 pl-9 pr-3 text-sm text-slate-800 placeholder:text-slate-500 focus:border-blue-400/70"
             />
           </div>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-cyan-600 md:text-sm">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-blue-600 md:text-sm">
             {role}
           </div>
 
@@ -31,12 +31,12 @@ export default function Navbar({ role, onMenuClick, onLogout, profileLabel = "Ad
             type="button"
             onClick={toggle}
             title={isDark ? "Switch to light mode" : "Switch to dark mode"}
-            className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 hover:text-cyan-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-cyan-400"
+            className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-blue-400"
           >
             {isDark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </button>
 
-          <button type="button" className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 hover:text-cyan-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+          <button type="button" className="rounded-xl border border-slate-200 bg-slate-50 p-2 text-slate-600 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
             <Bell className="h-4 w-4" />
           </button>
 
@@ -69,3 +69,4 @@ export default function Navbar({ role, onMenuClick, onLogout, profileLabel = "Ad
     </header>
   );
 }
+

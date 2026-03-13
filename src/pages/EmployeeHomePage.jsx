@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+﻿import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import StatCard from "../components/StatCard";
 import TripSessionCard from "../components/TripSessionCard";
@@ -72,7 +72,7 @@ export default function EmployeeHomePage({ user }) {
           <Link
             key={card.title}
             to={card.to}
-            className="panel rounded-2xl border border-slate-200 p-5 shadow-panel hover:border-cyan-300/30 hover:bg-cyan-400/5"
+            className="panel rounded-2xl border border-slate-200 p-5 shadow-panel hover:border-blue-300/30 hover:bg-blue-400/5"
           >
             <h3 className="page-title text-lg font-semibold text-slate-800 dark:text-slate-100">{card.title}</h3>
             <p className="mt-2 text-sm text-slate-400">{card.desc}</p>
@@ -82,3 +82,4 @@ export default function EmployeeHomePage({ user }) {
     </section>
   );
 }
+

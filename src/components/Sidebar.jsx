@@ -1,4 +1,4 @@
-import {
+﻿import {
   Activity,
   ClipboardList,
   FilePlus2,
@@ -34,7 +34,7 @@ export default function Sidebar({ navItems, open, onClose, onLogout }) {
       >
         <div className="mb-8 flex items-center justify-between">
           <div>
-            <p className="text-xs uppercase tracking-[0.25em] text-cyan-500">Enterprise Suite</p>
+            <p className="text-xs uppercase tracking-[0.25em] text-blue-500">Enterprise Suite</p>
             <h1 className="page-title text-xl font-bold text-slate-800">Expense Approval</h1>
           </div>
           <button className="text-slate-600 md:hidden" onClick={onClose}>
@@ -42,7 +42,7 @@ export default function Sidebar({ navItems, open, onClose, onLogout }) {
           </button>
         </div>
 
-        <div className="mb-5 rounded-xl border border-cyan-500/30 bg-cyan-50 p-3 text-xs text-cyan-700">
+        <div className="mb-5 rounded-xl border border-blue-500/30 bg-blue-50 p-3 text-xs text-blue-700">
           Active Environment: Production Preview
         </div>
 
@@ -71,7 +71,7 @@ export default function Sidebar({ navItems, open, onClose, onLogout }) {
                 className={({ isActive }) =>
                   `group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold transition ${
                     isActive
-                      ? "bg-gradient-to-r from-cyan-400 to-violet-500 text-slate-950 shadow-[0_10px_30px_rgba(56,189,248,0.35)]"
+                      ? "bg-blue-500 text-white shadow-[0_10px_26px_rgba(6,182,212,0.35)]"
                       : "text-slate-600 hover:bg-slate-100"
                   }`
                 }
@@ -86,3 +86,4 @@ export default function Sidebar({ navItems, open, onClose, onLogout }) {
     </>
   );
 }
+

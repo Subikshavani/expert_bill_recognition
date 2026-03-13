@@ -1,4 +1,4 @@
-import { CheckCircle2, Circle, Upload, Flag } from "lucide-react";
+﻿import { CheckCircle2, Circle, Upload, Flag } from "lucide-react";
 
 const STEPS = [
   { key: "started",   label: "Trip Started",     icon: CheckCircle2 },
@@ -30,25 +30,25 @@ export default function TripTimeline({ session }) {
               {/* connector line before */}
               <div className="flex w-full items-center">
                 {idx > 0 && (
-                  <div className={`h-1 flex-1 rounded-full transition-all duration-500 ${done || active ? "bg-cyan-400" : "bg-slate-200 dark:bg-slate-700"}`} />
+                  <div className={`h-1 flex-1 rounded-full transition-all duration-500 ${done || active ? "bg-blue-400" : "bg-slate-200 dark:bg-slate-700"}`} />
                 )}
                 <div
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300 ${
                     done
-                      ? "border-cyan-400 bg-cyan-400 text-white"
+                      ? "border-blue-400 bg-blue-400 text-white"
                       : active
-                      ? "border-cyan-400 bg-white text-cyan-500 shadow-[0_0_14px_rgba(34,211,238,0.5)] dark:bg-slate-900"
+                      ? "border-blue-400 bg-white text-blue-500 shadow-[0_0_14px_rgba(34,211,238,0.5)] dark:bg-slate-900"
                       : "border-slate-200 bg-slate-50 text-slate-400 dark:border-slate-700 dark:bg-slate-800"
                   }`}
                 >
                   {done ? <CheckCircle2 className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                 </div>
                 {idx < STEPS.length - 1 && (
-                  <div className={`h-1 flex-1 rounded-full transition-all duration-500 ${done ? "bg-cyan-400" : "bg-slate-200 dark:bg-slate-700"}`} />
+                  <div className={`h-1 flex-1 rounded-full transition-all duration-500 ${done ? "bg-blue-400" : "bg-slate-200 dark:bg-slate-700"}`} />
                 )}
               </div>
               <p className={`mt-2 text-center text-[11px] font-semibold ${
-                active  ? "text-cyan-600 dark:text-cyan-400" :
+                active  ? "text-blue-600 dark:text-blue-400" :
                 done    ? "text-slate-700 dark:text-slate-300" :
                           "text-slate-400"
               }`}>
@@ -65,3 +65,4 @@ export default function TripTimeline({ session }) {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import { MessageSquare, Trash2, Send } from "lucide-react";
 import Button from "./Button";
 import { createComment, getBillComments, deleteComment } from "../api/features";
@@ -37,6 +37,10 @@ export default function BillCommentsSection({ billId, user, onCommentAdded }) {
 
   const handleAddComment = async (e) => {
     e.preventDefault();
+    if (!user?.email || !user?.name) {
+      setError("User details are required to add a comment");
+      return;
+    }
     if (!newComment.trim()) {
       setError("Comment cannot be empty");
       return;
@@ -76,18 +80,18 @@ export default function BillCommentsSection({ billId, user, onCommentAdded }) {
   const getCommentTypeColor = (type) => {
     switch (type) {
       case "rejection_reason":
-        return "bg-rose-100/20 border-rose-200/30 dark:bg-rose-900/20 dark:border-rose-800/30 text-rose-600 dark:text-rose-400";
+        return "bg-blue-100/20 border-blue-200/30 dark:bg-blue-900/20 dark:border-blue-800/30 text-blue-600 dark:text-blue-400";
       case "approval_note":
-        return "bg-emerald-100/20 border-emerald-200/30 dark:bg-emerald-900/20 dark:border-emerald-800/30 text-emerald-600 dark:text-emerald-400";
+        return "bg-blue-100/20 border-blue-200/30 dark:bg-blue-900/20 dark:border-blue-800/30 text-blue-600 dark:text-blue-400";
       default:
-        return "bg-cyan-100/20 border-cyan-200/30 dark:bg-cyan-900/20 dark:border-cyan-800/30 text-cyan-600 dark:text-cyan-400";
+        return "bg-blue-100/20 border-blue-200/30 dark:bg-blue-900/20 dark:border-blue-800/30 text-blue-600 dark:text-blue-400";
     }
   };
 
   return (
     <div className="panel rounded-2xl border border-slate-200 p-6 shadow-panel dark:border-slate-700">
       <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-        <MessageSquare size={20} className="text-cyan-500" />
+        <MessageSquare size={20} className="text-blue-500" />
         Comments & Notes
       </h3>
 
@@ -110,7 +114,7 @@ export default function BillCommentsSection({ billId, user, onCommentAdded }) {
                     {cmt.commentType === "rejection_reason" && "Rejection Reason"}
                     {cmt.commentType === "approval_note" && "Approval Note"}
                     {cmt.commentType === "comment" && "Comment"}
-                    {" • "}
+                    {" â€¢ "}
                     {new Date(cmt.createdAt).toLocaleDateString()}
                   </p>
                 </div>
@@ -155,7 +159,7 @@ export default function BillCommentsSection({ billId, user, onCommentAdded }) {
             className="w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 dark:bg-slate-900 dark:border-slate-700 dark:text-slate-100"
           />
 
-          {error && <p className="text-xs text-rose-400">{error}</p>}
+          {error && <p className="text-xs text-blue-400">{error}</p>}
 
           <Button type="submit" disabled={submitting} className="flex items-center gap-2 w-full justify-center">
             <Send size={16} />
@@ -166,3 +170,4 @@ export default function BillCommentsSection({ billId, user, onCommentAdded }) {
     </div>
   );
 }
+
